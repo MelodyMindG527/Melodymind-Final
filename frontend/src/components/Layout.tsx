@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -19,6 +19,18 @@ import {
   MenuItem,
   Divider,
   Chip,
+  Badge,
+  Popover,
+  ListItemButton,
+  Switch,
+  FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -32,13 +44,32 @@ import {
   Notifications,
   Search,
   QueueMusic,
+  Clear,
+  LightMode,
+  DarkMode,
+  MusicNote,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import MusicPlayer from './MusicPlayer';
+import { useTheme as useAppTheme } from '../contexts/ThemeContext';
 
 interface LayoutProps {
   children: React.ReactNode;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  type: 'reminder' | 'recommendation' | 'system';
+  songRecommendation?: {
+    title: string;
+    artist: string;
+    mood: string;
+  };
 }
 
 const navItems = [
@@ -74,8 +105,18 @@ const navItems = [
   },
 ];
 
+// Mock song recommendations for notifications
+const songRecommendations = [
+  { title: "Yemito", artist: "Hari Charan", mood: "happy" },
+  { title: "Can't Stop the Feeling", artist: "Justin Timberlake", mood: "happy" },
+  { title: "Someone Like You", artist: "Adele", mood: "sad" },
+  { title: "Eye of the Tiger", artist: "Survivor", mood: "energetic" },
+  { title: "Weightless", artist: "Marconi Union", mood: "calm" },
+];
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const theme = useTheme();
+  const { darkMode, toggleTheme } = useAppTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const navigate = useNavigate();
@@ -84,6 +125,56 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
+  const [searchAnchorEl, setSearchAnchorEl] = useState<null | HTMLElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+
+  // Initialize notifications
+  useEffect(() => {
+    const initialNotifications: Notification[] = [
+      {
+        id: '1',
+        title: 'Time for Music! 🎵',
+        message: 'Take a break and listen to some music to refresh your mood.',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        read: false,
+        type: 'reminder',
+      },
+      {
+        id: '2',
+        title: 'Song Recommendation',
+        message: 'Based on your recent activity, you might enjoy this song:',
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+        read: false,
+        type: 'recommendation',
+        songRecommendation: songRecommendations[0],
+      },
+    ];
+    setNotifications(initialNotifications);
+  }, []);
+
+  // Schedule notifications every 3 hours
+  useEffect(() => {
+    const notificationInterval = setInterval(() => {
+      const randomSong = songRecommendations[Math.floor(Math.random() * songRecommendations.length)];
+      
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        title: 'Music Break Time! 🎶',
+        message: 'Take a moment to relax with some music. How about trying:',
+        timestamp: new Date(),
+        read: false,
+        type: 'recommendation',
+        songRecommendation: randomSong,
+      };
+
+      setNotifications(prev => [newNotification, ...prev]);
+    }, 3 * 60 * 60 * 1000); // 3 hours
+
+    return () => clearInterval(notificationInterval);
+  }, []);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -97,11 +188,65 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setAnchorEl(null);
   };
 
+  const handleNotificationsOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotificationsAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationsClose = () => {
+    setNotificationsAnchorEl(null);
+  };
+
+  const handleSearchOpen = (event: React.MouseEvent<HTMLElement>) => {
+    if (isMobile) {
+      setSearchDialogOpen(true);
+    } else {
+      setSearchAnchorEl(event.currentTarget);
+    }
+  };
+
+  const handleSearchClose = () => {
+    setSearchAnchorEl(null);
+    setSearchDialogOpen(false);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
     handleMenuClose();
   };
+
+  const handleNotificationRead = (notificationId: string) => {
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === notificationId
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
+  };
+
+  const handleClearAllNotifications = () => {
+    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+  };
+
+  const handleRemoveNotification = (notificationId: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== notificationId));
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Store search query in session storage to be used by other components
+    sessionStorage.setItem('globalSearchQuery', query);
+    
+    // Navigate to dashboard if not already there
+    if (location.pathname !== '/dashboard') {
+      navigate('/dashboard');
+    }
+    
+    handleSearchClose();
+  };
+
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
 
   const drawer = (
     <Box sx={{ 
@@ -109,7 +254,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+      background: darkMode 
+        ? 'linear-gradient(180deg, #1e1e1e 0%, #2d2d2d 100%)'
+        : 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+      color: darkMode ? 'white' : 'inherit',
     }}>
       {/* User Profile Section */}
       <Box sx={{ 
@@ -191,6 +339,33 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </Box>
       </Box>
 
+      {/* Theme Toggle in Drawer */}
+      {/* <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={darkMode}
+              onChange={toggleTheme}
+              icon={<LightMode sx={{ color: 'orange' }} />}
+              checkedIcon={<DarkMode sx={{ color: 'yellow' }} />}
+              sx={{
+                '& .MuiSwitch-track': {
+                  backgroundColor: darkMode ? 'grey.800' : 'grey.300',
+                },
+              }}
+            />
+          }
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {darkMode ? <DarkMode /> : <LightMode />}
+              <Typography variant="body2" fontWeight={600}>
+                {darkMode ? 'Dark Mode' : 'Light Mode'}
+              </Typography>
+            </Box>
+          }
+        />
+      </Box> */}
+
       {/* Navigation List */}
       <List sx={{ 
         flex: 1, 
@@ -247,7 +422,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <ListItemIcon 
                 sx={{ 
-                  color: isSelected ? 'white' : 'text.secondary',
+                  color: isSelected ? 'white' : (darkMode ? 'white' : 'text.secondary'),
                   minWidth: { xs: 48, sm: 56 },
                   position: 'relative',
                   zIndex: 1,
@@ -267,11 +442,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     fontWeight: isSelected ? 800 : 600,
                     fontSize: { xs: '1rem', sm: '1.125rem' },
                     lineHeight: 1.3,
-                    color: isSelected ? 'white' : 'text.primary',
+                    color: isSelected ? 'white' : (darkMode ? 'white' : 'text.primary'),
                   }}
                   secondaryTypographyProps={{
                     fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                    color: isSelected ? 'rgba(255, 255, 255, 0.8)' : 'text.secondary',
+                    color: isSelected ? 'rgba(255, 255, 255, 0.8)' : (darkMode ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary'),
                     fontWeight: 500,
                   }}
                 />
@@ -286,12 +461,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         p: { xs: 2, sm: 3 },
         borderTop: '1px solid',
         borderColor: 'divider',
-        background: 'rgba(0, 0, 0, 0.02)',
+        background: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
       }}>
         <Typography 
           variant="caption" 
           sx={{ 
-            color: 'text.secondary',
+            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
             fontSize: '0.75rem',
             fontWeight: 500,
             textAlign: 'center',
@@ -311,8 +486,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         position="static" 
         elevation={0} 
         sx={{ 
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          color: 'text.primary',
+          background: darkMode 
+            ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+            : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+          color: darkMode ? '#ffffff' : 'text.primary',
           borderBottom: '2px solid',
           borderColor: 'divider',
           backdropFilter: 'blur(10px)',
@@ -333,7 +510,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 p: 1.5,
                 borderRadius: 2,
                 '&:hover': {
-                  backgroundColor: 'action.hover',
+                  backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'action.hover',
                   transform: 'scale(1.05)',
                 },
                 transition: 'all 0.2s ease-in-out',
@@ -364,14 +541,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             MelodyMind
           </Typography>
 
-          {/* Search Icon */}
+          {/* Theme Toggle */}
           <IconButton
+            onClick={toggleTheme}
             sx={{ 
               mr: { xs: 1, sm: 2 },
               p: 1.5,
               borderRadius: 2,
               '&:hover': {
-                backgroundColor: 'action.hover',
+                backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'action.hover',
+                transform: 'scale(1.05) rotate(180deg)',
+              },
+              transition: 'all 0.3s ease-in-out',
+            }}
+          >
+            {darkMode ? <LightMode sx={{ color: 'orange' }} /> : <DarkMode sx={{ color: 'grey.600' }} />}
+          </IconButton>
+
+          {/* Search Icon */}
+          <IconButton
+            onClick={handleSearchOpen}
+            sx={{ 
+              mr: { xs: 1, sm: 2 },
+              p: 1.5,
+              borderRadius: 2,
+              '&:hover': {
+                backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'action.hover',
                 transform: 'scale(1.05)',
               },
               transition: 'all 0.2s ease-in-out',
@@ -382,18 +577,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Notifications Icon */}
           <IconButton
+            onClick={handleNotificationsOpen}
             sx={{ 
               mr: { xs: 1, sm: 2 },
               p: 1.5,
               borderRadius: 2,
               '&:hover': {
-                backgroundColor: 'action.hover',
+                backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'action.hover',
                 transform: 'scale(1.05)',
               },
               transition: 'all 0.2s ease-in-out',
             }}
           >
-            <Notifications />
+            <Badge badgeContent={unreadNotificationsCount} color="error">
+              <Notifications />
+            </Badge>
           </IconButton>
           
           <IconButton
@@ -402,7 +600,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               p: 1.5,
               borderRadius: 2,
               '&:hover': {
-                backgroundColor: 'action.hover',
+                backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'action.hover',
                 transform: 'scale(1.05)',
               },
               transition: 'all 0.2s ease-in-out',
@@ -444,6 +642,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 mt: 1,
                 minWidth: 200,
                 overflow: 'visible',
+                backgroundColor: darkMode ? '#1e1e1e' : 'background.paper',
+                color: darkMode ? 'white' : 'inherit',
                 '&::before': {
                   content: '""',
                   display: 'block',
@@ -452,7 +652,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   right: 14,
                   width: 10,
                   height: 10,
-                  bgcolor: 'background.paper',
+                  bgcolor: darkMode ? '#1e1e1e' : 'background.paper',
                   transform: 'translateY(-50%) rotate(45deg)',
                   zIndex: 0,
                 },
@@ -468,20 +668,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 mx: 1,
                 mt: 1,
                 '&:hover': {
-                  backgroundColor: 'primary.light',
+                  backgroundColor: darkMode ? 'rgba(99, 102, 241, 0.2)' : 'primary.light',
                   transform: 'translateX(4px)',
                 },
                 transition: 'all 0.2s ease-in-out',
               }}
             >
               <ListItemIcon>
-                <SettingsIcon fontSize="small" />
+                <SettingsIcon fontSize="small" sx={{ color: darkMode ? 'white' : 'inherit' }} />
               </ListItemIcon>
               <Typography variant="body2" fontWeight={600}>
                 Settings
               </Typography>
             </MenuItem>
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 1, backgroundColor: darkMode ? '#333' : 'divider' }} />
             <MenuItem 
               onClick={handleLogout}
               sx={{
@@ -491,14 +691,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 mx: 1,
                 mb: 1,
                 '&:hover': {
-                  backgroundColor: 'error.light',
+                  backgroundColor: darkMode ? 'rgba(244, 67, 54, 0.2)' : 'error.light',
                   transform: 'translateX(4px)',
                 },
                 transition: 'all 0.2s ease-in-out',
               }}
             >
               <ListItemIcon>
-                <Logout fontSize="small" />
+                <Logout fontSize="small" sx={{ color: darkMode ? 'white' : 'inherit' }} />
               </ListItemIcon>
               <Typography variant="body2" fontWeight={600}>
                 Logout
@@ -507,6 +707,266 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Menu>
         </Toolbar>
       </AppBar>
+
+      {/* Search Popover */}
+      <Popover
+        open={Boolean(searchAnchorEl)}
+        anchorEl={searchAnchorEl}
+        onClose={handleSearchClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx={{
+          mt: 1,
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: darkMode ? '#1e1e1e' : 'background.paper',
+            color: darkMode ? 'white' : 'inherit',
+          },
+        }}
+      >
+        <Box sx={{ p: 2, width: 320 }}>
+          <Typography variant="h6" gutterBottom fontWeight={600}>
+            Search MelodyMind
+          </Typography>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search for songs, moods, artists..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                handleSearch(searchQuery);
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchQuery('')}>
+                    <Clear />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: darkMode ? '#2d2d2d' : 'background.paper',
+              },
+            }}
+          />
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{ mt: 2 }}
+            onClick={() => handleSearch(searchQuery)}
+            disabled={!searchQuery.trim()}
+          >
+            Search
+          </Button>
+        </Box>
+      </Popover>
+
+      {/* Search Dialog for Mobile */}
+      <Dialog 
+        open={searchDialogOpen} 
+        onClose={handleSearchClose} 
+        fullWidth 
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            backgroundColor: darkMode ? '#1e1e1e' : 'background.paper',
+            color: darkMode ? 'white' : 'inherit',
+          },
+        }}
+      >
+        <DialogTitle>
+          <Typography variant="h6" fontWeight={600}>
+            Search MelodyMind
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search for songs, moods, artists..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim()) {
+                handleSearch(searchQuery);
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchQuery('')}>
+                    <Clear />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ 
+              mt: 2,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: darkMode ? '#2d2d2d' : 'background.paper',
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSearchClose}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={() => handleSearch(searchQuery)}
+            disabled={!searchQuery.trim()}
+          >
+            Search
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notifications Popover */}
+      <Popover
+        open={Boolean(notificationsAnchorEl)}
+        anchorEl={notificationsAnchorEl}
+        onClose={handleNotificationsClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx={{
+          mt: 1,
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: darkMode ? '#1e1e1e' : 'background.paper',
+            color: darkMode ? 'white' : 'inherit',
+          },
+        }}
+      >
+        <Box sx={{ width: 360, maxHeight: 480, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: darkMode ? '#333' : 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" fontWeight={600}>
+              Notifications
+              {unreadNotificationsCount > 0 && (
+                <Chip 
+                  label={unreadNotificationsCount} 
+                  size="small" 
+                  color="error" 
+                  sx={{ ml: 1, fontSize: '0.75rem', height: 20 }} 
+                />
+              )}
+            </Typography>
+            {notifications.length > 0 && (
+              <Button 
+                size="small" 
+                onClick={handleClearAllNotifications}
+                disabled={unreadNotificationsCount === 0}
+              >
+                Mark all read
+              </Button>
+            )}
+          </Box>
+          
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {notifications.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Notifications sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="body2" color="text.secondary">
+                  No notifications yet
+                </Typography>
+              </Box>
+            ) : (
+              <List sx={{ p: 0 }}>
+                {notifications.map((notification) => (
+                  <ListItemButton
+                    key={notification.id}
+                    sx={{
+                      borderBottom: 1,
+                      borderColor: darkMode ? '#333' : 'divider',
+                      backgroundColor: notification.read ? 'transparent' : (darkMode ? 'rgba(255, 255, 255, 0.05)' : 'action.hover'),
+                      '&:hover': {
+                        backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'action.selected',
+                      },
+                    }}
+                    onClick={() => handleNotificationRead(notification.id)}
+                  >
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                        <Typography variant="subtitle2" fontWeight={600} noWrap>
+                          {notification.title}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveNotification(notification.id);
+                          }}
+                          sx={{ ml: 1 }}
+                        >
+                          <Clear fontSize="small" />
+                        </IconButton>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {notification.message}
+                      </Typography>
+                      {notification.songRecommendation && (
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 1, 
+                          p: 1, 
+                          backgroundColor: darkMode ? 'rgba(99, 102, 241, 0.2)' : 'primary.50', 
+                          borderRadius: 1 
+                        }}>
+                          <MusicNote fontSize="small" color="primary" />
+                          <Typography variant="caption" fontWeight={600}>
+                            {notification.songRecommendation.title} - {notification.songRecommendation.artist}
+                          </Typography>
+                          <Chip 
+                            label={notification.songRecommendation.mood} 
+                            size="small" 
+                            sx={{ 
+                              backgroundColor: 'primary.main', 
+                              color: 'white',
+                              fontSize: '0.6rem',
+                              height: 18,
+                            }} 
+                          />
+                        </Box>
+                      )}
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        {notification.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Typography>
+                    </Box>
+                  </ListItemButton>
+                ))}
+              </List>
+            )}
+          </Box>
+        </Box>
+      </Popover>
 
       {/* Main Content */}
       <Box sx={{ display: 'flex', flex: 1 }}>
@@ -522,7 +982,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 boxSizing: 'border-box',
                 borderRight: '2px solid',
                 borderColor: 'divider',
-                background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+                background: darkMode 
+                  ? 'linear-gradient(180deg, #1e1e1e 0%, #2d2d2d 100%)'
+                  : 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
                 boxShadow: '4px 0 20px rgba(0, 0, 0, 0.08)',
               },
             }}
@@ -541,7 +1003,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             backgroundColor: 'background.default',
             minHeight: 'calc(100vh - 88px)',
             overflow: 'auto',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
+            background: darkMode 
+              ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
+              : 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
           }}
         >
           {children}
@@ -566,12 +1030,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             zIndex: 1000,
             borderTop: '2px solid',
             borderColor: 'divider',
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+            background: darkMode 
+              ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+              : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
             backdropFilter: 'blur(10px)',
             boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.1)',
             '& .MuiBottomNavigationAction-root': {
               minWidth: 'auto',
               padding: '8px 12px 12px',
+              color: darkMode ? 'white' : 'inherit',
               '&.Mui-selected': {
                 color: 'primary.main',
                 '& .MuiSvgIcon-root': {
@@ -615,7 +1082,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             '& .MuiDrawer-paper': { 
               boxSizing: 'border-box', 
               width: { xs: 320, sm: 360 },
-              background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+              background: darkMode 
+                ? 'linear-gradient(180deg, #1e1e1e 0%, #2d2d2d 100%)'
+                : 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
               boxShadow: '4px 0 20px rgba(0, 0, 0, 0.08)',
             },
           }}
@@ -627,4 +1096,4 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 };
 
-export default Layout; 
+export default Layout;

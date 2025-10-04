@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { createTheme, ThemeProvider as MUIThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,7 @@ import Journal from './pages/Journal';
 import Analytics from './pages/Analytics';
 import Games from './pages/Games';
 import Settings from './pages/Settings';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -19,9 +20,10 @@ import Layout from './components/Layout';
 // Store
 import { useAuthStore } from './store/authStore';
 
-const theme = createTheme({
+// Create theme configurations for both light and dark modes
+const getTheme = (mode: 'light' | 'dark') => createTheme({
   palette: {
-    mode: 'light',
+    mode,
     primary: {
       main: '#6366f1',
       light: '#818cf8',
@@ -33,8 +35,12 @@ const theme = createTheme({
       dark: '#db2777',
     },
     background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
+      default: mode === 'light' ? '#f8fafc' : '#121212',
+      paper: mode === 'light' ? '#ffffff' : '#1e1e1e',
+    },
+    text: {
+      primary: mode === 'light' ? '#1a202c' : '#ffffff',
+      secondary: mode === 'light' ? '#4a5568' : '#a0aec0',
     },
   },
   typography: {
@@ -128,9 +134,13 @@ const theme = createTheme({
           padding: '12px 24px',
           fontSize: 'clamp(0.875rem, 1.6vw, 1rem)',
           fontWeight: 600,
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          boxShadow: mode === 'light' 
+            ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            : '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
           '&:hover': {
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            boxShadow: mode === 'light'
+              ? '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+              : '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)',
             transform: 'translateY(-1px)',
           },
           transition: 'all 0.2s ease-in-out',
@@ -149,10 +159,17 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 20,
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          boxShadow: mode === 'light'
+            ? '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+            : '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)',
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
+            : 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)',
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            boxShadow: mode === 'light'
+              ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+              : '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
             transform: 'translateY(-2px)',
           },
         },
@@ -164,6 +181,7 @@ const theme = createTheme({
           '& .MuiOutlinedInput-root': {
             borderRadius: 12,
             fontSize: 'clamp(0.875rem, 1.6vw, 1rem)',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#2d2d2d',
           },
         },
       },
@@ -195,56 +213,112 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          boxShadow: mode === 'light'
+            ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            : '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
+          background: mode === 'light'
+            ? 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)'
+            : 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          boxShadow: '4px 0 8px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: mode === 'light'
+            ? '4px 0 8px -1px rgba(0, 0, 0, 0.1)'
+            : '4px 0 8px -1px rgba(0, 0, 0, 0.3)',
+          background: mode === 'light'
+            ? 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)'
+            : 'linear-gradient(180deg, #1e1e1e 0%, #2d2d2d 100%)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
         },
       },
     },
   },
 });
 
-const pageVariants = {
-  initial: {
-    opacity: 0,
-    x: -20,
-  },
-  in: {
-    opacity: 1,
-    x: 0,
-  },
-  out: {
-    opacity: 0,
-    x: 20,
-  },
-};
-
-const pageTransition = {
-  type: 'tween',
-  ease: 'anticipate',
-  duration: 0.4,
-};
-
-function App() {
-  const { isAuthenticated } = useAuthStore();
+// Component that uses the theme context to provide MUI theme
+const ThemedApp: React.FC = () => {
+  const { darkMode } = useTheme();
+  const theme = getTheme(darkMode ? 'dark' : 'light');
 
   return (
-    <ThemeProvider theme={theme}>
+    <MUIThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" replace />
-                ) : (
+      <AppContent />
+    </MUIThemeProvider>
+  );
+};
+
+// Main app content component
+const AppContent: React.FC = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  const pageVariants = {
+    initial: {
+      opacity: 0,
+      x: -20,
+    },
+    in: {
+      opacity: 1,
+      x: 0,
+    },
+    out: {
+      opacity: 0,
+      x: 20,
+    },
+  };
+
+  const pageTransition = {
+    type: 'tween',
+    ease: 'anticipate',
+    duration: 0.4,
+  };
+
+  return (
+    <Router>
+      <AnimatePresence mode="wait">
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <motion.div
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={pageVariants}
+                  transition={pageTransition}
+                >
+                  <LoginPage />
+                </motion.div>
+              )
+            }
+          />
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Layout>
                   <motion.div
                     initial="initial"
                     animate="in"
@@ -252,116 +326,97 @@ function App() {
                     variants={pageVariants}
                     transition={pageTransition}
                   >
-                    <LoginPage />
+                    <Dashboard />
                   </motion.div>
-                )
-              }
-            />
-            <Route
-              path="/"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" replace />
-                ) : (
-                  <Navigate to="/login" replace />
-                )
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <Dashboard />
-                    </motion.div>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/journal"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <Journal />
-                    </motion.div>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <Analytics />
-                    </motion.div>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <Games />
-                    </motion.div>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <Settings />
-                    </motion.div>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </AnimatePresence>
-      </Router>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journal"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Journal />
+                  </motion.div>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Analytics />
+                  </motion.div>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/games"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Games />
+                  </motion.div>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <Settings />
+                  </motion.div>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
+    </Router>
+  );
+};
+
+// Main App component
+function App() {
+  return (
+    <ThemeProvider>
+      <ThemedApp />
     </ThemeProvider>
   );
 }
 
-export default App; 
+export default App;

@@ -323,8 +323,7 @@ class OpenRouterLyricsService {
 
 // Initialize services (Replace with your actual API keys)
 const youTubePlayer = new YouTubeMusicPlayer();
-//uncommment this line
-//const lyricsService = new OpenRouterLyricsService('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');
+const lyricsService = new OpenRouterLyricsService('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');
 
 const Dashboard: React.FC = () => {
   const theme = useTheme();
