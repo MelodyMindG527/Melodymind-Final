@@ -54,7 +54,7 @@ const Analytics: React.FC = () => {
 
     try {
       const canvas = await html2canvas(analyticsRef.current, {
-        scale: 2,
+        
         useCORS: true,
         logging: false,
       });

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MelodyMind AI Chat Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    #chat { 
+      width: 100%; 
+      max-width: 800px; 
+      margin: auto; 
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .api-config {
+      background: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .api-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    
+    .model-select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    #messages { 
+      padding: 20px; 
+      height: 400px; 
+      overflow-y: auto;
+      background: #f8f9fa;
+    }
+    
+    .message { 
+      margin: 15px 0; 
+      padding: 12px 16px;
+      border-radius: 18px;
+      max-width: 80%;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    .user { 
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 5px;
+    }
+    
+    .bot { 
+      background: white;
+      color: #333;
+      border: 1px solid #e0e0e0;
+      border-bottom-left-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .typing { 
+      color: #666; 
+      font-style: italic; 
+    }
+    
+    .input-container {
+      display: flex;
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      gap: 10px;
+    }
+    
+    input[type="text"] { 
+      flex: 1; 
+      padding: 12px 16px; 
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="text"]:focus {
+      border-color: #007bff;
+    }
+    
+    button { 
+      padding: 12px 24px; 
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+    }
+    
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 0 20px 20px;
+      background: white;
+    }
+    
+    .voice-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .voice-btn {
+      padding: 8px 16px;
+      font-size: 12px;
+      background: #28a745;
+    }
+    
+    .voice-btn.stop {
+      background: #dc3545;
+    }
+    
+    .status {
+      font-size: 12px;
+      color: #666;
+      margin-left: auto;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .voice-visualizer {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      height: 20px;
+    }
+    
+    .bar {
+      width: 3px;
+      background: #007bff;
+      border-radius: 2px;
+      transition: height 0.1s ease;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .success {
+      background: #d1edff;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .quick-questions {
+      padding: 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .question-chip {
+      display: inline-block;
+      background: white;
+      border: 1px solid #007bff;
+      color: #007bff;
+      padding: 8px 16px;
+      margin: 0 5px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+
+    .question-chip:hover {
+      background: #007bff;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .message-time {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-top: 5px;
+      text-align: right;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      background: white;
+      border-radius: 18px;
+      border-bottom-left-radius: 5px;
+      max-width: 85%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 3px;
+      margin-left: 10px;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      background: #666;
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
+      30% { transform: scale(1.2); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      
+      #messages {
+        height: 300px;
+      }
+      
+      .message {
+        max-width: 90%;
+      }
+      
+      .input-container {
+        flex-direction: column;
+      }
+      
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <div class="header">
+      <h2>🤖 MelodyMind AI Assistant</h2>
+      <p>Powered by OpenRouter API + Text-to-Speech</p>
+    </div>
+    
+    <div class="api-config">
+      <!-- <input type="password" id="apiKey" class="api-input" placeholder="Enter your OpenRouter API Key (Optional)" value="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" /> -->
+      <select id="modelSelect" class="model-select">
+        <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        <option value="openai/gpt-4">GPT-4</option>
+        <option value="meta-llama/llama-3-70b-instruct">Llama 3 70B</option>
+        <option value="google/gemini-pro">Gemini Pro</option>
+        <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+        <option value="mistralai/mistral-7b-instruct">Mistral 7B</option>
+      </select>
+      <button id="saveConfig" style="width: 100%; margin-top: 10px;">Save Configuration</button>
+    </div>
+
+    <div class="quick-questions">
+      <div class="question-chip" data-question="What is MelodyMind?">What is MelodyMind?</div>
+      <div class="question-chip" data-question="How does mood detection work?">How does mood detection work?</div>
+      <div class="question-chip" data-question="Can you recommend happy songs?">Recommend happy songs</div>
+      <div class="question-chip" data-question="What music genres do you support?">Supported music genres</div>
+      <div class="question-chip" data-question="How to create a playlist?">Create a playlist</div>
+      <div class="question-chip" data-question="Tell me about voice controls">Voice controls</div>
+    </div>
+    
+    <div id="messages">
+      <div class="message bot">
+        <strong>MelodyMind AI:</strong> Welcome! I'm your MelodyMind AI assistant. I come pre-configured with an API key, so you can start chatting right away! You can also use your own API key if you prefer. Ask me about music, mood detection, or anything else!
+        <div class="message-time" id="initial-time"></div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <div class="voice-controls">
+        <button id="toggleVoice" class="voice-btn">🔊 Enable Voice</button>
+        <button id="stopVoice" class="voice-btn stop" disabled>⏹️ Stop</button>
+        <button id="clearChat" class="voice-btn" style="background: #ffc107;">🗑️ Clear</button>
+        <div id="voiceVisualizer" class="voice-visualizer" style="display: none;">
+          <!-- Voice bars will be generated here -->
+        </div>
+      </div>
+      <div id="status" class="status">Voice: Disabled | API: Configured</div>
+    </div>
+    
+    <div class="input-container">
+      <input type="text" id="query" placeholder="Type your message here..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const messagesEl = document.getElementById('messages');
+    const queryInput = document.getElementById('query');
+    const sendBtn = document.getElementById('send');
+    const toggleVoiceBtn = document.getElementById('toggleVoice');
+    const stopVoiceBtn = document.getElementById('stopVoice');
+    const voiceVisualizer = document.getElementById('voiceVisualizer');
+    const statusEl = document.getElementById('status');
+    const apiKeyInput = document.getElementById('apiKey');
+    const modelSelect = document.getElementById('modelSelect');
+    const saveConfigBtn = document.getElementById('saveConfig');
+    const clearChatBtn = document.getElementById('clearChat');
+    const questionChips = document.querySelectorAll('.question-chip');
+
+    // App State
+    let isVoiceEnabled = false;
+    let isSpeaking = false;
+    let currentUtterance = null;
+    let voiceBars = [];
+    let apiKey = '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';
+    let currentModel = 'openai/gpt-3.5-turbo';
+    let chatHistory = [];
+    let conversationHistory = [
+      {
+        role: "system",
+        content: "You are MelodyMind AI, a friendly music assistant. You help users with music recommendations based on mood, explaining MelodyMind features, mood detection technology, playlist creation, voice controls, and music genres. Keep responses helpful, musical, and engaging."
+      }
+    ];
+
+    // Predefined Q&A about MelodyMind
+    const predefinedQnA = {
+      "what is melodymind": "MelodyMind is an AI-powered music companion that uses mood detection, voice controls, and smart algorithms to recommend perfect music for your current emotional state. It combines camera-based emotion analysis, text input, and voice commands to understand your mood and play suitable music.",
+      
+      "how does mood detection work": "MelodyMind uses multiple methods for mood detection:\n• Camera analysis: Uses your webcam to detect facial expressions and emotions\n• Text input: You can describe how you feel in words\n• Voice analysis: Speaks about your mood for voice-based detection\n• The AI then matches your mood with suitable music from our extensive library.",
+      
+      "can you recommend happy songs": "Absolutely! For happy moods, I recommend:\n• 'Can't Stop the Feeling' - Justin Timberlake\n• 'Happy' - Pharrell Williams\n• 'Walking on Sunshine' - Katrina & The Waves\n• 'Good Vibrations' - The Beach Boys\n• 'Uptown Funk' - Mark Ronson ft. Bruno Mars\nYou can also use the mood detection feature to get personalized happy song recommendations!",
+      
+      "what music genres do you support": "MelodyMind supports a wide variety of genres:\n• Pop, Rock, Hip-Hop, Jazz\n• Classical, Electronic, Ambient\n• Folk, Country, R&B\n• Movie Soundtracks, Lo-fi\n• And many more!\nOur AI can recommend music across all these genres based on your detected mood.",
+      
+      "how to create a playlist": "Creating playlists in MelodyMind is easy:\n1. Use mood detection to find songs matching your current emotion\n2. Click the 'Smart Playlist' feature for AI-generated playlists\n3. Save your favorite songs to custom playlists\n4. Use voice commands: 'Create a workout playlist' or 'Make study music'\nThe AI will automatically curate playlists based on your preferences!",
+      
+      "tell me about voice controls": "MelodyMind's voice controls let you:\n• Speak your mood: 'I feel energetic today'\n• Control playback: 'Play next song', 'Pause music'\n• Request playlists: 'Create a relaxing playlist'\n• Ask questions: 'What's playing?'\n• Navigate features hands-free\nJust click the voice control button and start speaking!"
+    };
+
+    // OpenRouter API Configuration
+    const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+    // Initialize voice visualizer
+    function initVoiceVisualizer() {
+      voiceVisualizer.innerHTML = '';
+      voiceBars = [];
+      for (let i = 0; i < 20; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = '2px';
+        voiceVisualizer.appendChild(bar);
+        voiceBars.push(bar);
+      }
+    }
+
+    // Update voice visualizer
+    function updateVoiceVisualizer() {
+      if (!isSpeaking) {
+        voiceBars.forEach(bar => bar.style.height = '2px');
+        return;
+      }
+
+      voiceBars.forEach((bar, index) => {
+        const height = 2 + Math.random() * 18;
+        bar.style.height = `${height}px`;
+        bar.style.background = `hsl(${210 + index * 2}, 100%, 50%)`;
+      });
+    }
+
+    // Text-to-Speech function
+    function speakText(text) {
+      if (!isVoiceEnabled || !window.speechSynthesis) return;
+
+      // Stop any current speech
+      if (currentUtterance) {
+        window.speechSynthesis.cancel();
+      }
+
+      // Clean the text for speech
+      const cleanText = text
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/`(.*?)`/g, '$1')
+        .replace(/[#_\-~>]/g, '')
+        .replace(/\[.*?\]\(.*?\)/g, '')
+        .trim();
+
+      currentUtterance = new SpeechSynthesisUtterance(cleanText);
+      
+      // Configure voice settings
+      currentUtterance.rate = 1.0;
+      currentUtterance.pitch = 1.0;
+      currentUtterance.volume = 1.0;
+
+      // Get available voices
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoices = voices.filter(voice => 
+        voice.lang.includes('en') && 
+        voice.name.toLowerCase().includes('female')
+      );
+      
+      if (preferredVoices.length > 0) {
+        currentUtterance.voice = preferredVoices[0];
+      }
+
+      // Event handlers
+      currentUtterance.onstart = () => {
+        isSpeaking = true;
+        stopVoiceBtn.disabled = false;
+        updateStatus();
+        startVoiceAnimation();
+      };
+
+      currentUtterance.onend = () => {
+        isSpeaking = false;
+        stopVoiceBtn.disabled = true;
+        updateStatus();
+        stopVoiceAnimation();
+      };
+
+      currentUtterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        isSpeaking = false;
+        stopVoiceBtn.disabled = true;
+        updateStatus();
+        stopVoiceAnimation();
+      };
+
+      window.speechSynthesis.speak(currentUtterance);
+    }
+
+    // Voice animation
+    let voiceAnimationInterval;
+    function startVoiceAnimation() {
+      voiceVisualizer.style.display = 'flex';
+      voiceAnimationInterval = setInterval(updateVoiceVisualizer, 100);
+    }
+
+    function stopVoiceAnimation() {
+      if (voiceAnimationInterval) {
+        clearInterval(voiceAnimationInterval);
+      }
+      voiceVisualizer.style.display = 'none';
+      voiceBars.forEach(bar => bar.style.height = '2px');
+    }
+
+    // Stop speech function
+    function stopSpeech() {
+      if (window.speechSynthesis && isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        stopVoiceBtn.disabled = true;
+        updateStatus();
+        stopVoiceAnimation();
+      }
+    }
+
+    // Update status display
+    function updateStatus() {
+      const voiceStatus = isVoiceEnabled ? (isSpeaking ? 'Speaking...' : 'Enabled') : 'Disabled';
+      const apiStatus = apiKey ? 'Configured' : 'Not Configured';
+      statusEl.textContent = `Voice: ${voiceStatus} | API: ${apiStatus}`;
+    }
+
+    // Add message to chat
+    function addMessage(sender, text, isError = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender} ${isError ? 'error' : ''}`;
+      
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      if (sender === 'user') {
+        messageDiv.innerHTML = `
+          <strong>You:</strong> ${text}
+          <div class="message-time">${timestamp}</div>
+        `;
+      } else {
+        messageDiv.innerHTML = `
+          <strong>MelodyMind AI:</strong> ${text.replace(/\n/g, '<br>')}
+          <div class="message-time">${timestamp}</div>
+        `;
+      }
+      
+      messagesEl.appendChild(messageDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      // Save to chat history
+      chatHistory.push({
+        sender: sender,
+        text: text,
+        timestamp: timestamp
+      });
+
+      saveChatHistory();
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing-indicator';
+      typingDiv.id = 'typingIndicator';
+      typingDiv.innerHTML = `
+        <strong>MelodyMind AI:</strong> 
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      messagesEl.appendChild(typingDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Remove typing indicator
+    function removeTypingIndicator() {
+      const typingIndicator = document.getElementById('typingIndicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+    }
+
+    // Call OpenRouter API
+    async function callOpenRouterAPI(message) {
+      if (!apiKey) {
+        throw new Error('API key not configured');
+      }
+
+      // Add user message to conversation history
+      conversationHistory.push({
+        role: "user",
+        content: message
+      });
+
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "MelodyMind Chat"
+        },
+        body: JSON.stringify({
+          model: currentModel,
+          messages: conversationHistory,
+          max_tokens: 1000,
+          temperature: 0.7,
+          stream: false
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const botMessage = data.choices[0].message.content;
+
+      // Add bot message to conversation history
+      conversationHistory.push({
+        role: "assistant",
+        content: botMessage
+      });
+
+      return botMessage;
+    }
+
+    // Send message function
+    async function sendMessage() {
+      const query = queryInput.value.trim();
+      if (!query) return;
+
+      // Add user message
+      addMessage('user', query);
+      queryInput.value = '';
+      sendBtn.disabled = true;
+      
+      // Show typing indicator
+      showTypingIndicator();
+
+      try {
+        let botMessage;
+
+        // Check if it's a predefined question
+        const lowerMessage = query.toLowerCase();
+        const predefinedAnswer = Object.keys(predefinedQnA).find(key => 
+          lowerMessage.includes(key.toLowerCase())
+        );
+
+        if (predefinedAnswer) {
+          botMessage = predefinedQnA[predefinedAnswer];
+        } else {
+          // Call OpenRouter API
+          botMessage = await callOpenRouterAPI(query);
+        }
+
+        // Remove typing indicator and add bot response
+        removeTypingIndicator();
+        addMessage('bot', botMessage);
+
+        // Speak the response if voice is enabled
+        if (isVoiceEnabled) {
+          speakText(botMessage);
+        }
+
+      } catch (error) {
+        console.error('API Error:', error);
+        removeTypingIndicator();
+        addMessage('bot', `Error: ${error.message}`, true);
+      } finally {
+        sendBtn.disabled = false;
+        queryInput.focus();
+      }
+    }
+
+    // Save configuration
+    function saveConfiguration() {
+      const newApiKey = apiKeyInput.value.trim();
+      const newModel = modelSelect.value;
+
+      if (!newApiKey) {
+        alert('Please enter your OpenRouter API key');
+        return;
+      }
+
+      apiKey = newApiKey;
+      currentModel = newModel;
+
+      // Mask the API key in the input
+      apiKeyInput.type = 'password';
+      apiKeyInput.value = '•'.repeat(16);
+
+      // Update status
+      updateStatus();
+
+      // Add success message
+      addMessage('bot', `✅ Configuration saved! Using ${modelSelect.options[modelSelect.selectedIndex].text}. You can now start chatting.`, false);
+    }
+
+    // Clear chat history
+    function clearChat() {
+      if (confirm('Are you sure you want to clear the chat history?')) {
+        messagesEl.innerHTML = `
+          <div class="message bot">
+            <strong>MelodyMind AI:</strong> Chat history cleared! How can I help you today?
+            <div class="message-time" id="initial-time"></div>
+          </div>
+        `;
+        chatHistory = [];
+        conversationHistory = [
+          {
+            role: "system",
+            content: "You are MelodyMind AI, a friendly music assistant. You help users with music recommendations based on mood, explaining MelodyMind features, mood detection technology, playlist creation, voice controls, and music genres. Keep responses helpful, musical, and engaging."
+          }
+        ];
+        localStorage.removeItem('melodymind_chat_history');
+        updateInitialTime();
+        
+        if (isVoiceEnabled) {
+          speakText("Chat history cleared. How can I help you?");
+        }
+      }
+    }
+
+    // Save chat history to localStorage
+    function saveChatHistory() {
+      localStorage.setItem('melodymind_chat_history', JSON.stringify({
+        chatHistory: chatHistory,
+        conversationHistory: conversationHistory
+      }));
+    }
+
+    // Load chat history from localStorage
+    function loadChatHistory() {
+      const savedHistory = localStorage.getItem('melodymind_chat_history');
+      if (savedHistory) {
+        try {
+          const history = JSON.parse(savedHistory);
+          chatHistory = history.chatHistory || [];
+          conversationHistory = history.conversationHistory || [
+            {
+              role: "system",
+              content: "You are MelodyMind AI, a friendly music assistant. You help users with music recommendations based on mood, explaining MelodyMind features, mood detection technology, playlist creation, voice controls, and music genres. Keep responses helpful, musical, and engaging."
+            }
+          ];
+
+          // Re-render chat history
+          messagesEl.innerHTML = '';
+          chatHistory.forEach(msg => {
+            addMessage(msg.sender, msg.text);
+          });
+        } catch (error) {
+          console.error('Error loading chat history:', error);
+        }
+      }
+    }
+
+    // Load saved configuration
+    function loadConfiguration() {
+      const savedApiKey = localStorage.getItem('openrouter_api_key');
+      const savedModel = localStorage.getItem('openrouter_model');
+
+      if (savedApiKey) {
+        apiKey = savedApiKey;
+        apiKeyInput.value = '•'.repeat(16);
+      }
+
+      if (savedModel) {
+        currentModel = savedModel;
+        modelSelect.value = savedModel;
+      }
+
+      updateStatus();
+    }
+
+    // Update initial message time
+    function updateInitialTime() {
+      const initialTimeEl = document.getElementById('initial-time');
+      if (initialTimeEl) {
+        initialTimeEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    // Event Listeners
+    sendBtn.addEventListener('click', sendMessage);
+    
+    queryInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !sendBtn.disabled) {
+        sendMessage();
+      }
+    });
+
+    // Voice control event listeners
+    toggleVoiceBtn.addEventListener('click', () => {
+      isVoiceEnabled = !isVoiceEnabled;
+      
+      if (isVoiceEnabled) {
+        toggleVoiceBtn.textContent = '🔊 Voice Enabled';
+        toggleVoiceBtn.style.background = '#6c757d';
+        
+        // Test voice with a welcome message
+        if (window.speechSynthesis) {
+          speakText("Voice mode activated. I will now speak my responses.");
+        }
+      } else {
+        toggleVoiceBtn.textContent = '🔊 Enable Voice';
+        toggleVoiceBtn.style.background = '';
+        stopSpeech();
+      }
+      
+      updateStatus();
+    });
+
+    stopVoiceBtn.addEventListener('click', stopSpeech);
+    saveConfigBtn.addEventListener('click', saveConfiguration);
+    clearChatBtn.addEventListener('click', clearChat);
+
+    // Quick question chips
+    questionChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const question = chip.getAttribute('data-question');
+        queryInput.value = question;
+        sendMessage();
+      });
+    });
+
+    // Initialize the application
+    function init() {
+      initVoiceVisualizer();
+      loadConfiguration();
+      loadChatHistory();
+      updateStatus();
+      updateInitialTime();
+
+      // Enable chat interface since we have a pre-configured API key
+      queryInput.disabled = false;
+      queryInput.placeholder = "Type your message here...";
+      sendBtn.disabled = false;
+
+      // Load voices when they become available
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          console.log('Voices loaded:', window.speechSynthesis.getVoices().length);
+        };
+      }
+
+      // Handle page visibility change
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isSpeaking) {
+          stopSpeech();
+        }
+      });
+    }
+
+    // Start the application
+    init();
+  </script>
+</body>
+</html>

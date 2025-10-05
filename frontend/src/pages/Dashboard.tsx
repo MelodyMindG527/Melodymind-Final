@@ -838,109 +838,45 @@ const predefinedQnA: Record<string, string> = {
 };
 
 function FloatingChat() {
-  const [open, setOpen] = React.useState(false);
-  const [messages, setMessages] = React.useState<{ sender: 'user' | 'bot'; text: string }[]>([]);
-  const [input, setInput] = React.useState('');
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const apiKey = "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";
-
-  React.useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
-    setMessages(prev => [...prev, { sender: 'user', text }]);
-    setInput('');
-    if (predefinedQnA[text]) {
-      setMessages(prev => [...prev, { sender: 'bot', text: predefinedQnA[text] }]);
-      return;
-    }
-    try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-8b-instruct:free',
-          messages: [
-            { role: 'system', content: 'You are a helpful music assistant.' },
-            { role: 'user', content: text }
-          ],
-          max_tokens: 500,
-          temperature: 0.5
-        })
-      });
-      const data = await response.json();
-      const botMessage = data.choices?.[0]?.message?.content || 'Sorry, no response.';
-      setMessages(prev => [...prev, { sender: 'bot', text: botMessage }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { sender: 'bot', text: 'Error connecting to OpenRouter API.' }]);
-    }
+  const redirectToChatPage = () => {
+    // Open chat in a new tab with proper dimensions
+    window.open('/chat.html', '_blank', 'width=600,height=700');
   };
 
   return (
     <Box sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 2000 }}>
-      {!open ? (
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
         <IconButton
           color="primary"
-          sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, color: 'white', width: 60, height: 60 }}
-          onClick={() => setOpen(true)}
+          sx={{ 
+            bgcolor: 'primary.main', 
+            '&:hover': { bgcolor: 'primary.dark' }, 
+            color: 'white', 
+            width: 60, 
+            height: 60,
+            animation: 'pulse 2s infinite',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+          }}
+          onClick={redirectToChatPage}
         >
           <Chat />
         </IconButton>
-      ) : (
-        <Paper elevation={6} sx={{ width: 380, height: 480, display: 'flex', flexDirection: 'column', p: 1 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="h6">Music ChatBot</Typography>
-            <IconButton size="small" onClick={() => setOpen(false)}><Close /></IconButton>
-          </Box>
-          <Box mb={1} display="flex" flexWrap="wrap" gap={1}>
-            {Object.keys(predefinedQnA).map((q, idx) => (
-              <Button key={idx} size="small" variant="outlined" onClick={() => sendMessage(q)}>
-                {q}
-              </Button>
-            ))}
-          </Box>
-          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 1, border: '1px solid #eee', borderRadius: 1, mb: 1 }}>
-            <List>
-              {messages.map((msg, index) => (
-                <ListItem key={index} sx={{ justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
-                  <ListItemText
-                    primary={msg.text}
-                    sx={{
-                      bgcolor: msg.sender === 'user' ? 'primary.main' : 'grey.300',
-                      color: msg.sender === 'user' ? 'white' : 'black',
-                      borderRadius: 2,
-                      p: 1.5,
-                      maxWidth: '75%'
-                    }}
-                  />
-                </ListItem>
-              ))}
-              <div ref={messagesEndRef} />
-            </List>
-          </Box>
-          <Box display="flex" gap={1}>
-            <TextField
-              fullWidth
-              size="small"
-              variant="outlined"
-              value={input}
-              placeholder="Ask me something..."
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(input); }}
-            />
-            <Button variant="contained" onClick={() => sendMessage(input)}>Send</Button>
-          </Box>
-        </Paper>
-      )}
-      <ChatBot />
-              
+      </motion.div>
+      
+      {/* Add CSS for pulse animation */}
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 6px 25px rgba(0,0,0,0.4); }
+            100% { transform: scale(1); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+          }
+        `}
+      </style>
     </Box>
-    
   );
 }
 
