@@ -22,13 +22,20 @@ interface StreamlitResponse {
 }
 
 const emotionSongs: any = {
-  happy: [{ id: 1, title: "Happy", artist: "Pharrell Williams", cover: "" }],
-  sad: [{ id: 2, title: "Someone Like You", artist: "Adele", cover: "" }],
-  angry: [{ id: 3, title: "Eye of the Tiger", artist: "Survivor", cover: "" }],
-  surprise: [{ id: 4, title: "Thunderstruck", artist: "AC/DC", cover: "" }],
-  fear: [{ id: 5, title: "Weightless", artist: "Marconi Union", cover: "" }],
-  disgust: [{ id: 6, title: "Breathe Me", artist: "Sia", cover: "" }],
-  neutral: [{ id: 7, title: "Clair de Lune", artist: "Claude Debussy", cover: "" }]
+  happy: [{ id: 1, title: "Happy", artist: "Pharrell Williams", youtubeId: "ZbZSe6N_BXs", url: "https://www.youtube.com/watch?v=ZbZSe6N_BXs", cover: "https://i.ytimg.com/vi/ZbZSe6N_BXs/hqdefault.jpg" }],
+  sad: [{ id: 2, title: "Someone Like You", artist: "Adele", youtubeId: "hLQl3WQQoQ0", url: "https://www.youtube.com/watch?v=hLQl3WQQoQ0", cover: "https://i.ytimg.com/vi/hLQl3WQQoQ0/hqdefault.jpg" }],
+  angry: [{ id: 3, title: "Eye of the Tiger", artist: "Survivor", youtubeId: "btPJPFnesV4", url: "https://www.youtube.com/watch?v=btPJPFnesV4", cover: "https://i.ytimg.com/vi/btPJPFnesV4/hqdefault.jpg" }],
+  surprise: [{ id: 4, title: "Thunderstruck", artist: "AC/DC", youtubeId: "v2AC41dglnM", url: "https://www.youtube.com/watch?v=v2AC41dglnM", cover: "https://i.ytimg.com/vi/v2AC41dglnM/hqdefault.jpg" }],
+  fear: [{ id: 5, title: "Weightless", artist: "Marconi Union", youtubeId: "UfcAVejslrU", url: "https://www.youtube.com/watch?v=UfcAVejslrU", cover: "https://i.ytimg.com/vi/UfcAVejslrU/hqdefault.jpg" }],
+  disgust: [{ id: 6, title: "Breathe Me", artist: "Sia", youtubeId: "2To6qk1API4", url: "https://www.youtube.com/watch?v=2To6qk1API4", cover: "https://i.ytimg.com/vi/2To6qk1API4/hqdefault.jpg" }],
+  neutral: [
+    { id: 7, title: "Clair de Lune", artist: "Claude Debussy", youtubeId: "CvFH_6DNRCY", url: "https://www.youtube.com/watch?v=CvFH_6DNRCY", cover: "https://i.ytimg.com/vi/CvFH_6DNRCY/hqdefault.jpg" },
+    { id: 8, title: "Weightless", artist: "Marconi Union", youtubeId: "UfcAVejslrU", url: "https://www.youtube.com/watch?v=UfcAVejslrU", cover: "https://i.ytimg.com/vi/UfcAVejslrU/hqdefault.jpg" },
+    { id: 9, title: "River Flows in You", artist: "Yiruma", youtubeId: "7maJOI3QMu0", url: "https://www.youtube.com/watch?v=7maJOI3QMu0", cover: "https://i.ytimg.com/vi/7maJOI3QMu0/hqdefault.jpg" },
+    { id: 10, title: "Gymnopédie No. 1", artist: "Erik Satie", youtubeId: "S-Xm7s9eGxU", url: "https://www.youtube.com/watch?v=S-Xm7s9eGxU", cover: "https://i.ytimg.com/vi/S-Xm7s9eGxU/hqdefault.jpg" },
+    { id: 11, title: "Canon in D", artist: "Johann Pachelbel", youtubeId: "NlprozG9BwY", url: "https://www.youtube.com/watch?v=NlprozG9BwY", cover: "https://i.ytimg.com/vi/NlprozG9BwY/hqdefault.jpg" },
+    { id: 12, title: "Moonlight Sonata", artist: "Ludwig van Beethoven", youtubeId: "4Tr0otuiQuU", url: "https://www.youtube.com/watch?v=4Tr0otuiQuU", cover: "https://i.ytimg.com/vi/4Tr0otuiQuU/hqdefault.jpg" }
+  ]
 };
 
 const WebcamCapture: React.FC<WebcamCaptureProps> = ({ open, onClose, onMoodDetected }) => {
@@ -38,6 +45,9 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ open, onClose, onMoodDete
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [detectedMood, setDetectedMood] = useState<any>(null);
   const [error, setError] = useState('');
+  const [cameraError, setCameraError] = useState('');
+  const [cameraAvailable, setCameraAvailable] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const capture = useCallback(() => {
     if (!webcamRef.current) return;
@@ -48,6 +58,20 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ open, onClose, onMoodDete
     } else {
       setError('Failed to capture image. Please check camera permissions.');
     }
+  }, []);
+
+  const handleCameraError = useCallback((error: any) => {
+    console.error('Camera error:', error);
+    setCameraError('Camera not available. Please check if a camera is connected and permissions are granted.');
+    setCameraAvailable(false);
+    setProgressMsg('Camera not available - using text input instead');
+  }, []);
+
+  const handleCameraLoad = useCallback(() => {
+    setCameraError('');
+    setCameraAvailable(true);
+    setProgressMsg('Camera ready - click to capture');
+    setIsInitialized(true);
   }, []);
 
   const analyzeWithBackend = async (imageSrc: string) => {
@@ -66,14 +90,32 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ open, onClose, onMoodDete
       const result: StreamlitResponse = await response.json();
       console.log('Backend result:', result);
       setProgressMsg('Analysis complete!');
-      const songs = emotionSongs[result.emotion] || [];
-      setDetectedMood({ ...result, songs });
+      
+      // Ensure neutral mood maps to calm songs
+      const emotionKey = result.emotion === 'neutral' ? 'neutral' : result.emotion;
+      const songs = emotionSongs[emotionKey] || emotionSongs['neutral'] || [];
+      
+      setDetectedMood({ 
+        ...result, 
+        emotion: emotionKey, // Ensure we use the mapped emotion
+        songs 
+      });
     } catch (err: any) {
       console.error(err);
       setError('Analysis failed. Fallback applied.');
       setProgressMsg('Using fallback analysis...');
-      const fallbackEmotion = Object.keys(emotionSongs)[Math.floor(Math.random()*7)];
-      setDetectedMood({ emotion: fallbackEmotion, confidence: 0.7, predictions: [], songs: emotionSongs[fallbackEmotion] });
+      
+      // Use neutral as default fallback to play calm songs
+      const fallbackEmotion = 'neutral';
+      setDetectedMood({ 
+        emotion: fallbackEmotion, 
+        confidence: 0.7, 
+        predictions: [], 
+        songs: emotionSongs[fallbackEmotion],
+        analysis_method: 'fallback',
+        model_used: 'mock',
+        timestamp: new Date().toISOString()
+      });
     } finally {
       setIsAnalyzing(false);
     }
@@ -98,7 +140,48 @@ const WebcamCapture: React.FC<WebcamCaptureProps> = ({ open, onClose, onMoodDete
       <DialogContent>
         {error && <Alert severity="error">{error}</Alert>}
         <Typography variant="body2" sx={{ mb: 1 }}>{progressMsg}</Typography>
-        {!capturedImage && <Webcam ref={webcamRef} audio={false} screenshotFormat="image/jpeg" />}
+        {!capturedImage && cameraAvailable && (
+          <Webcam 
+            ref={webcamRef} 
+            audio={false} 
+            screenshotFormat="image/jpeg"
+            onUserMedia={handleCameraLoad}
+            onUserMediaError={handleCameraError}
+            videoConstraints={{
+              width: 640,
+              height: 480,
+              facingMode: "user"
+            }}
+            style={{ display: isInitialized ? 'block' : 'none' }}
+          />
+        )}
+        {cameraError && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            {cameraError}
+            <br />
+            <Button 
+              variant="outlined" 
+              size="small" 
+              sx={{ mt: 1 }}
+              onClick={() => {
+                // Fallback to text-based mood detection
+                const mockMood = {
+                  emotion: 'neutral',
+                  confidence: 0.7,
+                  predictions: [{ emotion: 'neutral', score: 0.7, percentage: 70 }],
+                  analysis_method: 'text_fallback',
+                  model_used: 'mock',
+                  timestamp: new Date().toISOString(),
+                  songs: emotionSongs.neutral
+                };
+                setDetectedMood(mockMood);
+                setProgressMsg('Using text-based mood detection');
+              }}
+            >
+              Use Text Input Instead
+            </Button>
+          </Alert>
+        )}
         {capturedImage && <img src={capturedImage} style={{ width: '100%', maxHeight: 300 }} />}
         {isAnalyzing && <CircularProgress />}
         {detectedMood && !isAnalyzing && (

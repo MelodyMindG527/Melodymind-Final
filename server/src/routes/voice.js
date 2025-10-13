@@ -60,6 +60,66 @@ router.post('/analyze', requireAuth, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// POST /analyze-speech-emotion -> analyze audio and transcript for emotion
+router.post('/analyze-speech-emotion', async (req, res, next) => {
+  try {
+    const { audio, transcript, sample_rate } = req.body || {};
+    
+    if (!audio && !transcript) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Either audio or transcript is required' 
+      });
+    }
+
+    let result;
+    
+    // If we have audio, analyze it
+    if (audio) {
+      try {
+        // Convert base64 audio to buffer
+        const audioBuffer = Buffer.from(audio, 'base64');
+        result = await ai.audio.analyzeAudio(audioBuffer, transcript);
+      } catch (audioErr) {
+        console.warn('Audio analysis failed, falling back to text:', audioErr);
+        // Fall back to text analysis if audio fails
+        if (transcript) {
+          result = await ai.text.analyzeText(transcript);
+        } else {
+          throw new Error('Both audio and text analysis failed');
+        }
+      }
+    } else if (transcript) {
+      // Use text analysis
+      result = await ai.text.analyzeText(transcript);
+    }
+
+    // Format response to match frontend expectations
+    const response = {
+      emotion: result.moodLabel,
+      confidence: result.confidence,
+      intensity: result.intensity,
+      predictions: [
+        {
+          emotion: result.moodLabel,
+          score: result.confidence,
+          percentage: result.confidence * 100
+        }
+      ],
+      analysis_method: audio ? 'speech_emotion_recognition' : 'text_analysis',
+      model_used: 'melodymind-ai-adapter',
+      timestamp: new Date().toISOString(),
+      transcript: transcript || '',
+      raw_score: result.rawScore || result.confidence
+    };
+
+    res.json(response);
+  } catch (e) { 
+    console.error('Speech emotion analysis error:', e);
+    next(e); 
+  }
+});
+
 export default router;
 
 

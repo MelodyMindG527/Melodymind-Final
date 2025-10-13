@@ -15,6 +15,7 @@ import{
   LinearProgress,
   IconButton,
   Grid,
+  Avatar,
 } from '@mui/material';
 import { 
   Mic, 
@@ -24,12 +25,13 @@ import {
   RecordVoiceOver,
   PlayArrow,
   VolumeUp,
-  Psychology
+  Psychology,
+  MusicNote
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-// Local server URL (similar to webcam example)
-const API_URL = 'http://127.0.0.1:8501';
+// Backend server URL for speech emotion analysis
+const API_URL = 'http://127.0.0.1:8000/api/v1';
 
 interface VoiceControlProps {
   open: boolean;
@@ -46,37 +48,65 @@ interface EmotionResult {
   timestamp: string;
 }
 
+// Song suggestions for different moods
+const moodSongs = {
+  happy: [
+    { id: "1", title: "Yemito", artist: "Hari Charan", youtubeId: "ZPZmMrUn63w", url: "https://www.youtube.com/watch?v=ZPZmMrUn63w", cover: "https://i.ytimg.com/vi/ZPZmMrUn63w/hqdefault.jpg" },
+    { id: "2", title: "Can't Stop the Feeling", artist: "Justin Timberlake", youtubeId: "ru0K8uYEZWw", url: "https://www.youtube.com/watch?v=ru0K8uYEZWw", cover: "https://i.ytimg.com/vi/ru0K8uYEZWw/hqdefault.jpg" }
+  ],
+  sad: [
+    { id: "3", title: "Someone Like You", artist: "Adele", youtubeId: "hLQl3WQQoQ0", url: "https://www.youtube.com/watch?v=hLQl3WQQoQ0", cover: "https://i.ytimg.com/vi/hLQl3WQQoQ0/hqdefault.jpg" },
+    { id: "4", title: "The Sound of Silence", artist: "Simon & Garfunkel", youtubeId: "4zLfCnGVeL4", url: "https://www.youtube.com/watch?v=4zLfCnGVeL4", cover: "https://i.ytimg.com/vi/4zLfCnGVeL4/hqdefault.jpg" }
+  ],
+  angry: [
+    { id: "5", title: "Eye of the Tiger", artist: "Survivor", youtubeId: "btPJPFnesV4", url: "https://www.youtube.com/watch?v=btPJPFnesV4", cover: "https://i.ytimg.com/vi/btPJPFnesV4/hqdefault.jpg" },
+    { id: "6", title: "Lose Yourself", artist: "Eminem", youtubeId: "_Yhyp-_hX2s", url: "https://www.youtube.com/watch?v=_Yhyp-_hX2s", cover: "https://i.ytimg.com/vi/_Yhyp-_hX2s/hqdefault.jpg" }
+  ],
+  anxious: [
+    { id: "7", title: "Weightless", artist: "Marconi Union", youtubeId: "UfcAVejslrU", url: "https://www.youtube.com/watch?v=UfcAVejslrU", cover: "https://i.ytimg.com/vi/UfcAVejslrU/hqdefault.jpg" },
+    { id: "8", title: "Clair de Lune", artist: "Claude Debussy", youtubeId: "CvFH_6DNRCY", url: "https://www.youtube.com/watch?v=CvFH_6DNRCY", cover: "https://i.ytimg.com/vi/CvFH_6DNRCY/hqdefault.jpg" }
+  ],
+  neutral: [
+    { id: "9", title: "River Flows in You", artist: "Yiruma", youtubeId: "7maJOI3QMu0", url: "https://www.youtube.com/watch?v=7maJOI3QMu0", cover: "https://i.ytimg.com/vi/7maJOI3QMu0/hqdefault.jpg" },
+    { id: "10", title: "Gymnopédie No. 1", artist: "Erik Satie", youtubeId: "S-Xm7s9eGxU", url: "https://www.youtube.com/watch?v=S-Xm7s9eGxU", cover: "https://i.ytimg.com/vi/S-Xm7s9eGxU/hqdefault.jpg" }
+  ],
+  energetic: [
+    { id: "11", title: "Eye of the Tiger", artist: "Survivor", youtubeId: "btPJPFnesV4", url: "https://www.youtube.com/watch?v=btPJPFnesV4", cover: "https://i.ytimg.com/vi/btPJPFnesV4/hqdefault.jpg" },
+    { id: "12", title: "Lose Yourself", artist: "Eminem", youtubeId: "_Yhyp-_hX2s", url: "https://www.youtube.com/watch?v=_Yhyp-_hX2s", cover: "https://i.ytimg.com/vi/_Yhyp-_hX2s/hqdefault.jpg" }
+  ]
+};
+
 // Test speech samples for different emotions
 const testSpeechSamples = [
   {
     emotion: 'happy',
-    text: "I'm feeling really happy .",
+    text: "I'm feeling absolutely fantastic and excited about everything!",
     description: "Positive and cheerful mood"
   },
   {
     emotion: 'sad',
-    text: "I'm feeling really down and sad today.",
+    text: "I'm feeling really down and miserable today, everything seems hopeless.",
     description: "Feeling low and melancholic"
   },
   {
     emotion: 'angry',
-    text: "I'm so angry .",
+    text: "I'm so furious and frustrated with this situation!",
     description: "Frustrated and upset"
   },
   {
     emotion: 'anxious',
-    text: "I'm feeling really anxious .",
+    text: "I'm feeling really anxious and worried about what's coming next.",
     description: "Worried and tense"
   },
   {
-    emotion: 'calm',
-    text: "I'm feeling very calm and peaceful right now.",
+    emotion: 'neutral',
+    text: "I'm feeling very calm and peaceful right now, just relaxed.",
     description: "Relaxed and peaceful"
   },
   {
-    emotion: 'surprised',
-    text: "Wow, I'm completely surprised by this news! ",
-    description: "Shocked and amazed"
+    emotion: 'energetic',
+    text: "I'm feeling so pumped and motivated to get things done!",
+    description: "High energy and enthusiasm"
   }
 ];
 
@@ -185,6 +215,11 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
       setRecordingTime(0);
       setProgressMsg('Listening... Speak now!');
 
+      // Check if media devices are available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Media devices not supported in this browser');
+      }
+
       // Initialize speech recognition
       initializeSpeechRecognition();
 
@@ -193,14 +228,23 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
         setRecordingTime(prev => prev + 1);
       }, 1000);
 
-      // Get microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
+      // Get microphone access with fallback options
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
+      } catch (mediaError: any) {
+        // Try with basic audio constraints if advanced ones fail
+        console.warn('Advanced audio constraints failed, trying basic:', mediaError);
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: true 
+        });
+      }
 
       // Start audio analysis for visualization
       startAudioAnalysis(stream);
@@ -220,9 +264,25 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
         recognitionRef.current.start();
       }
 
-    } catch (err) {
-      setError('Failed to access microphone. Please check permissions.');
+    } catch (err: any) {
       console.error('Microphone access error:', err);
+      let errorMessage = 'Failed to access microphone. ';
+      
+      if (err.name === 'NotAllowedError') {
+        errorMessage += 'Please allow microphone access and try again.';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage += 'No microphone found. Please connect a microphone.';
+      } else if (err.name === 'NotSupportedError') {
+        errorMessage += 'Microphone not supported in this browser.';
+      } else {
+        errorMessage += 'Please check your microphone permissions.';
+      }
+      
+      setError(errorMessage);
+      
+      // Offer fallback to text input
+      setProgressMsg('Microphone not available - you can still use text input');
+      
       stopListening();
     }
   };
@@ -253,6 +313,16 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
     if (mediaRecorderRef.current?.stream) {
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
+
+    // Safely close AudioContext if it exists and is not already closed
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close();
+      } catch (err) {
+        console.warn('AudioContext close error in stopListening:', err);
+      }
+    }
+    audioContextRef.current = null;
 
     setAudioLevel(0);
   };
@@ -289,6 +359,9 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
       
       setProgressMsg('Analysis complete!');
       
+      // Get song suggestions for the detected mood
+      const songs = moodSongs[result.emotion as keyof typeof moodSongs] || moodSongs['neutral'];
+      
       const mood = {
         type: result.emotion,
         intensity: Math.round(result.confidence * 10),
@@ -299,7 +372,8 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
         timestamp: new Date().toISOString(),
         predictions: result.predictions,
         model_used: result.model_used,
-        analysis_method: result.analysis_method
+        analysis_method: result.analysis_method,
+        songs: songs // Add song suggestions
       };
 
       setDetectedMood(mood);
@@ -318,31 +392,50 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
 
   // Text-based fallback emotion analysis
   const analyzeWithTextFallback = async (text: string) => {
-    // Simple keyword-based emotion detection as fallback
-    const emotionKeywords = {
-      happy: ['happy', 'excited', 'great', 'wonderful', 'amazing', 'good', 'joy', 'fantastic'],
-      sad: ['sad', 'depressed', 'unhappy', 'miserable', 'down', 'blue', 'heartbroken'],
-      angry: ['angry', 'mad', 'furious', 'annoyed', 'frustrated', 'irritated'],
-      anxious: ['anxious', 'nervous', 'worried', 'scared', 'afraid', 'fearful'],
-      calm: ['calm', 'relaxed', 'peaceful', 'chill', 'serene'],
-      surprised: ['surprised', 'shocked', 'amazed', 'astonished']
-    };
+    console.log('🎯 Frontend fallback analysis for:', text);
+    
+    // Enhanced keyword-based emotion detection with priority order (same as backend)
+    const happyKeywords = ['happy', 'joy', 'excited', 'great', 'wonderful', 'amazing', 'fantastic', 'awesome', 'brilliant', 'delighted', 'cheerful', 'optimistic', 'grateful', 'proud', 'love', 'adore', 'enjoy', 'fun', 'laugh', 'smile', 'celebration', 'success', 'victory', 'win'];
+    const energeticKeywords = ['energetic', 'pumped', 'hyped', 'motivated', 'active', 'dynamic', 'vigorous', 'lively', 'bouncy', 'peppy', 'enthusiastic', 'passionate', 'intense', 'powerful', 'strong', 'ready', 'fired up', 'raring to go'];
+    const sadKeywords = ['sad', 'down', 'depressed', 'upset', 'miserable', 'heartbroken', 'grief', 'sorrow', 'melancholy', 'blue', 'unhappy', 'disappointed', 'hurt', 'pain', 'loss', 'cry', 'tears', 'lonely', 'empty', 'hopeless'];
+    const angryKeywords = ['angry', 'mad', 'furious', 'annoyed', 'frustrated', 'irritated', 'rage', 'hate', 'disgusted', 'outraged', 'livid', 'enraged', 'pissed', 'aggravated', 'bothered', 'upset', 'fuming'];
+    const anxiousKeywords = ['anxious', 'worried', 'nervous', 'scared', 'afraid', 'fearful', 'stressed', 'tense', 'panic', 'overwhelmed', 'uneasy', 'restless', 'apprehensive', 'concerned', 'troubled', 'distressed'];
+    const calmKeywords = ['calm', 'peaceful', 'relaxed', 'chill', 'serene', 'tranquil', 'quiet', 'still', 'gentle', 'soft', 'mellow', 'soothing', 'comfortable', 'content', 'satisfied', 'at ease'];
 
     const textLower = text.toLowerCase();
     let detectedEmotion = 'neutral';
     let confidence = 0.6;
 
-    for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
-      for (const keyword of keywords) {
-        if (textLower.includes(keyword)) {
-          detectedEmotion = emotion;
-          confidence = 0.8;
-          break;
-        }
-      }
-      if (detectedEmotion !== 'neutral') break;
+    // Check for emotion keywords in priority order (energetic before happy to catch "pumped")
+    if (energeticKeywords.some(keyword => textLower.includes(keyword))) {
+      detectedEmotion = 'energetic';
+      confidence = 0.85;
+      console.log('🎯 Frontend detected ENERGETIC mood from keywords');
+    } else if (happyKeywords.some(keyword => textLower.includes(keyword))) {
+      detectedEmotion = 'happy';
+      confidence = 0.8;
+      console.log('🎯 Frontend detected HAPPY mood from keywords');
+    } else if (sadKeywords.some(keyword => textLower.includes(keyword))) {
+      detectedEmotion = 'sad';
+      confidence = 0.8;
+      console.log('🎯 Frontend detected SAD mood from keywords');
+    } else if (angryKeywords.some(keyword => textLower.includes(keyword))) {
+      detectedEmotion = 'angry';
+      confidence = 0.8;
+      console.log('🎯 Frontend detected ANGRY mood from keywords');
+    } else if (anxiousKeywords.some(keyword => textLower.includes(keyword))) {
+      detectedEmotion = 'anxious';
+      confidence = 0.8;
+      console.log('🎯 Frontend detected ANXIOUS mood from keywords');
+    } else if (calmKeywords.some(keyword => textLower.includes(keyword))) {
+      detectedEmotion = 'neutral'; // Map calm to neutral for consistency
+      confidence = 0.8;
+      console.log('🎯 Frontend detected NEUTRAL mood from keywords');
     }
 
+    // Get song suggestions for the detected mood
+    const songs = moodSongs[detectedEmotion as keyof typeof moodSongs] || moodSongs['neutral'];
+    
     const mood = {
       type: detectedEmotion,
       intensity: Math.round(confidence * 10),
@@ -353,7 +446,8 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
       timestamp: new Date().toISOString(),
       predictions: [{ emotion: detectedEmotion, score: confidence, percentage: Math.round(confidence * 100) }],
       model_used: 'keyword_based_fallback',
-      analysis_method: 'text_keyword_matching'
+      analysis_method: 'text_keyword_matching',
+      songs: songs // Add song suggestions
     };
 
     setDetectedMood(mood);
@@ -537,11 +631,18 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
     
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
+    // Safely close AudioContext if it exists and is not already closed
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close();
+      } catch (err) {
+        console.warn('AudioContext close error:', err);
+      }
     }
+    audioContextRef.current = null;
     
     // Stop any ongoing speech
     window.speechSynthesis.cancel();
@@ -798,6 +899,61 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ open, onClose, onMoodDetect
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Song Suggestions */}
+                {detectedMood.songs && detectedMood.songs.length > 0 && (
+                  <Card sx={{ mb: 2, backgroundColor: 'rgba(255,255,255,0.95)' }}>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MusicNote /> Suggested Songs for {getEmotionDisplayName(detectedMood.emotion)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Based on your detected mood, here are some songs you might enjoy:
+                      </Typography>
+                      
+                      <Grid container spacing={2}>
+                        {detectedMood.songs.map((song: any) => (
+                          <Grid item xs={12} key={song.id}>
+                            <Card 
+                              sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                p: 1.5,
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s, box-shadow 0.2s',
+                                '&:hover': { 
+                                  transform: 'scale(1.02)',
+                                  boxShadow: 3
+                                }
+                              }}
+                              onClick={() => {
+                                console.log('Playing song:', song);
+                                // Optional: You can add direct play functionality here
+                              }}
+                            >
+                              <Avatar 
+                                src={song.cover} 
+                                sx={{ width: 56, height: 56, mr: 2 }}
+                                variant="rounded"
+                              />
+                              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                <Typography variant="subtitle2" fontWeight="bold" noWrap>
+                                  {song.title}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" noWrap>
+                                  {song.artist}
+                                </Typography>
+                              </Box>
+                              <IconButton size="small" color="primary">
+                                <PlayArrow />
+                              </IconButton>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                )}
               </motion.div>
             )}
           </CardContent>

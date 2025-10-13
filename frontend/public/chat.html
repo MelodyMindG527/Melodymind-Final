@@ -319,10 +319,9 @@
     </div>
     
     <div class="api-config">
-      // /////////////////////////////
-      //Note : remove extra -s from the key
-      // ///////////////////////////// 
-      <input type="password" id="apiKey" class="api-input" placeholder="Enter your OpenRouter API Key (Optional)" value="sk----or----v1-b57694b3504073980bbd42372386e051a19a195cf0dd4b452359601c0319d60b" />
+      <p style="text-align: center; color: #666; margin: 0;">
+        🤖 Connected to MelodyMind Backend Server
+      </p>
       <select id="modelSelect" class="model-select">
         <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
         <option value="openai/gpt-4">GPT-4</option>
@@ -331,7 +330,6 @@
         <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
         <option value="mistralai/mistral-7b-instruct">Mistral 7B</option>
       </select>
-      <button id="saveConfig" style="width: 100%; margin-top: 10px;">Save Configuration</button>
     </div>
 
     <div class="quick-questions">
@@ -377,9 +375,7 @@
     const stopVoiceBtn = document.getElementById('stopVoice');
     const voiceVisualizer = document.getElementById('voiceVisualizer');
     const statusEl = document.getElementById('status');
-    const apiKeyInput = document.getElementById('apiKey');
     const modelSelect = document.getElementById('modelSelect');
-    const saveConfigBtn = document.getElementById('saveConfig');
     const clearChatBtn = document.getElementById('clearChat');
     const questionChips = document.querySelectorAll('.question-chip');
 
@@ -388,7 +384,6 @@
     let isSpeaking = false;
     let currentUtterance = null;
     let voiceBars = [];
-    let apiKey = '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';
     let currentModel = 'openai/gpt-3.5-turbo';
     let chatHistory = [];
     let conversationHistory = [
@@ -413,8 +408,8 @@
       "tell me about voice controls": "MelodyMind's voice controls let you:\n• Speak your mood: 'I feel energetic today'\n• Control playback: 'Play next song', 'Pause music'\n• Request playlists: 'Create a relaxing playlist'\n• Ask questions: 'What's playing?'\n• Navigate features hands-free\nJust click the voice control button and start speaking!"
     };
 
-    // OpenRouter API Configuration
-    const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+    // Backend API Configuration
+    const BACKEND_API_URL = "http://localhost:8000/api/v1/chat/chat";
 
     // Initialize voice visualizer
     function initVoiceVisualizer() {
@@ -508,6 +503,10 @@
     // Voice animation
     let voiceAnimationInterval;
     function startVoiceAnimation() {
+      // Clear any existing interval first
+      if (voiceAnimationInterval) {
+        clearInterval(voiceAnimationInterval);
+      }
       voiceVisualizer.style.display = 'flex';
       voiceAnimationInterval = setInterval(updateVoiceVisualizer, 100);
     }
@@ -515,6 +514,7 @@
     function stopVoiceAnimation() {
       if (voiceAnimationInterval) {
         clearInterval(voiceAnimationInterval);
+        voiceAnimationInterval = null; // Reset to null
       }
       voiceVisualizer.style.display = 'none';
       voiceBars.forEach(bar => bar.style.height = '2px');
@@ -529,13 +529,16 @@
         updateStatus();
         stopVoiceAnimation();
       }
+      // Clear any pending speech
+      if (currentUtterance) {
+        currentUtterance = null;
+      }
     }
 
     // Update status display
     function updateStatus() {
       const voiceStatus = isVoiceEnabled ? (isSpeaking ? 'Speaking...' : 'Enabled') : 'Disabled';
-      const apiStatus = apiKey ? 'Configured' : 'Not Configured';
-      statusEl.textContent = `Voice: ${voiceStatus} | API: ${apiStatus}`;
+      statusEl.textContent = `Voice: ${voiceStatus} | Backend: Connected`;
     }
 
     // Add message to chat
@@ -595,56 +598,38 @@
       }
     }
 
-    // Call OpenRouter API
-    async function callOpenRouterAPI(message) {
-      if (!apiKey) {
-        throw new Error('API key not configured');
-      }
-
-      // Add user message to conversation history
-      conversationHistory.push({
-        role: "user",
-        content: message
-      });
-
-      const response = await fetch(OPENROUTER_API_URL, {
+    // Call Backend Chat API
+    async function callBackendChatAPI(message) {
+      const response = await fetch(BACKEND_API_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "MelodyMind Chat"
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: currentModel,
-          messages: conversationHistory,
-          max_tokens: 1000,
-          temperature: 0.7,
-          stream: false
+          message: message,
+          model: currentModel
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        throw new Error(errorData.message || `Backend API error: ${response.status}`);
       }
 
       const data = await response.json();
-      const botMessage = data.choices[0].message.content;
-
-      // Add bot message to conversation history
-      conversationHistory.push({
-        role: "assistant",
-        content: botMessage
-      });
-
-      return botMessage;
+      return data.message;
     }
 
     // Send message function
     async function sendMessage() {
       const query = queryInput.value.trim();
       if (!query) return;
+
+      // Validate message length to prevent memory issues
+      if (query.length > 2000) {
+        addMessage('bot', 'Message too long. Please keep messages under 2000 characters.', true);
+        return;
+      }
 
       // Add user message
       addMessage('user', query);
@@ -666,8 +651,8 @@
         if (predefinedAnswer) {
           botMessage = predefinedQnA[predefinedAnswer];
         } else {
-          // Call OpenRouter API
-          botMessage = await callOpenRouterAPI(query);
+          // Call Backend Chat API
+          botMessage = await callBackendChatAPI(query);
         }
 
         // Remove typing indicator and add bot response
@@ -689,33 +674,23 @@
       }
     }
 
-    // Save configuration
-    function saveConfiguration() {
-      const newApiKey = apiKeyInput.value.trim();
-      const newModel = modelSelect.value;
-
-      if (!newApiKey) {
-        alert('Please enter your OpenRouter API key');
-        return;
+    // Update model selection
+    function updateModel() {
+      currentModel = modelSelect.value;
+      try {
+        localStorage.setItem('chat_model', currentModel);
+      } catch (error) {
+        console.warn('Could not save model selection:', error);
       }
-
-      apiKey = newApiKey;
-      currentModel = newModel;
-
-      // Mask the API key in the input
-      apiKeyInput.type = 'password';
-      apiKeyInput.value = '•'.repeat(16);
-
-      // Update status
-      updateStatus();
-
-      // Add success message
-      addMessage('bot', `✅ Configuration saved! Using ${modelSelect.options[modelSelect.selectedIndex].text}. You can now start chatting.`, false);
+      addMessage('bot', `✅ Model changed to ${modelSelect.options[modelSelect.selectedIndex].text}.`, false);
     }
 
     // Clear chat history
     function clearChat() {
       if (confirm('Are you sure you want to clear the chat history?')) {
+        // Stop any ongoing speech
+        stopSpeech();
+        
         messagesEl.innerHTML = `
           <div class="message bot">
             <strong>MelodyMind AI:</strong> Chat history cleared! How can I help you today?
@@ -729,7 +704,13 @@
             content: "You are MelodyMind AI, a friendly music assistant. You help users with music recommendations based on mood, explaining MelodyMind features, mood detection technology, playlist creation, voice controls, and music genres. Keep responses helpful, musical, and engaging."
           }
         ];
-        localStorage.removeItem('melodymind_chat_history');
+        
+        try {
+          localStorage.removeItem('melodymind_chat_history');
+        } catch (error) {
+          console.warn('Could not clear localStorage:', error);
+        }
+        
         updateInitialTime();
         
         if (isVoiceEnabled) {
@@ -740,17 +721,27 @@
 
     // Save chat history to localStorage
     function saveChatHistory() {
-      localStorage.setItem('melodymind_chat_history', JSON.stringify({
-        chatHistory: chatHistory,
-        conversationHistory: conversationHistory
-      }));
+      try {
+        // Limit chat history size to prevent memory issues
+        const maxHistorySize = 50;
+        if (chatHistory.length > maxHistorySize) {
+          chatHistory = chatHistory.slice(-maxHistorySize);
+        }
+        
+        localStorage.setItem('melodymind_chat_history', JSON.stringify({
+          chatHistory: chatHistory,
+          conversationHistory: conversationHistory
+        }));
+      } catch (error) {
+        console.warn('Could not save chat history:', error);
+      }
     }
 
     // Load chat history from localStorage
     function loadChatHistory() {
-      const savedHistory = localStorage.getItem('melodymind_chat_history');
-      if (savedHistory) {
-        try {
+      try {
+        const savedHistory = localStorage.getItem('melodymind_chat_history');
+        if (savedHistory) {
           const history = JSON.parse(savedHistory);
           chatHistory = history.chatHistory || [];
           conversationHistory = history.conversationHistory || [
@@ -760,32 +751,40 @@
             }
           ];
 
+          // Limit loaded history to prevent memory issues
+          const maxHistorySize = 50;
+          if (chatHistory.length > maxHistorySize) {
+            chatHistory = chatHistory.slice(-maxHistorySize);
+          }
+
           // Re-render chat history
           messagesEl.innerHTML = '';
           chatHistory.forEach(msg => {
             addMessage(msg.sender, msg.text);
           });
-        } catch (error) {
-          console.error('Error loading chat history:', error);
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        // Clear corrupted data
+        try {
+          localStorage.removeItem('melodymind_chat_history');
+        } catch (clearError) {
+          console.warn('Could not clear corrupted localStorage:', clearError);
         }
       }
     }
 
-    // Load saved configuration
-    function loadConfiguration() {
-      const savedApiKey = localStorage.getItem('openrouter_api_key');
-      const savedModel = localStorage.getItem('openrouter_model');
-
-      if (savedApiKey) {
-        apiKey = savedApiKey;
-        apiKeyInput.value = '•'.repeat(16);
+    // Load saved model
+    function loadModel() {
+      try {
+        const savedModel = localStorage.getItem('chat_model');
+        if (savedModel) {
+          currentModel = savedModel;
+          modelSelect.value = savedModel;
+        }
+      } catch (error) {
+        console.warn('Could not load saved model:', error);
       }
-
-      if (savedModel) {
-        currentModel = savedModel;
-        modelSelect.value = savedModel;
-      }
-
       updateStatus();
     }
 
@@ -828,7 +827,7 @@
     });
 
     stopVoiceBtn.addEventListener('click', stopSpeech);
-    saveConfigBtn.addEventListener('click', saveConfiguration);
+    modelSelect.addEventListener('change', updateModel);
     clearChatBtn.addEventListener('click', clearChat);
 
     // Quick question chips
@@ -843,12 +842,12 @@
     // Initialize the application
     function init() {
       initVoiceVisualizer();
-      loadConfiguration();
+      loadModel();
       loadChatHistory();
       updateStatus();
       updateInitialTime();
 
-      // Enable chat interface since we have a pre-configured API key
+      // Enable chat interface
       queryInput.disabled = false;
       queryInput.placeholder = "Type your message here...";
       sendBtn.disabled = false;
@@ -864,6 +863,14 @@
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && isSpeaking) {
           stopSpeech();
+        }
+      });
+
+      // Handle page unload - cleanup resources
+      window.addEventListener('beforeunload', () => {
+        stopSpeech();
+        if (voiceAnimationInterval) {
+          clearInterval(voiceAnimationInterval);
         }
       });
     }

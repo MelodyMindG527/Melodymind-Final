@@ -60,7 +60,7 @@ declare global {
 }
 
 const loadYouTubeAPI = () =>
-  new Promise<void>((resolve) => {
+  new Promise<void>((resolve, reject) => {
     if (window.YT && window.YT.Player) {
       ytPlayerReady = true;
       return resolve();
@@ -69,15 +69,26 @@ const loadYouTubeAPI = () =>
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     
+    // Set timeout for API loading
+    const timeout = setTimeout(() => {
+      reject(new Error('YouTube API failed to load within 10 seconds'));
+    }, 10000);
+    
     window.onYouTubeIframeAPIReady = () => {
+      clearTimeout(timeout);
       ytPlayerReady = true;
       resolve();
+    };
+    
+    tag.onerror = () => {
+      clearTimeout(timeout);
+      reject(new Error('Failed to load YouTube API script'));
     };
     
     document.body.appendChild(tag);
   });
 
-const createYTPlayer = (videoId: string, onStateChange: (state: number) => void) => {
+const createYTPlayer = (videoId: string, onStateChange: (state: number) => void, setError: (error: string) => void) => {
   try {
     // Clear existing player
     if (ytPlayer) {
@@ -117,6 +128,26 @@ const createYTPlayer = (videoId: string, onStateChange: (state: number) => void)
         },
         onError: (error: any) => {
           console.error('YouTube player error:', error);
+          // Handle specific YouTube player errors
+          let errorMessage = 'Failed to load audio source. ';
+          switch (error.data) {
+            case 2:
+              errorMessage += 'Invalid video ID.';
+              break;
+            case 5:
+              errorMessage += 'HTML5 player error.';
+              break;
+            case 100:
+              errorMessage += 'Video not found or private.';
+              break;
+            case 101:
+            case 150:
+              errorMessage += 'Video embedding not allowed.';
+              break;
+            default:
+              errorMessage += 'Please try a different song.';
+          }
+          setError(errorMessage);
         }
       }
     });
@@ -358,7 +389,7 @@ const SmartPlaylistGenerator: React.FC<SmartPlaylistGeneratorProps> = ({
       }).catch(err => {
         console.error('Failed to load YouTube API:', err);
         if (isMountedRef.current) {
-          setError('Failed to initialize audio player.');
+          setError('Failed to initialize audio player. Please check your internet connection and try again.');
         }
       });
     }
@@ -537,7 +568,7 @@ const SmartPlaylistGenerator: React.FC<SmartPlaylistGeneratorProps> = ({
             handleSongEnd();
             break;
         }
-      });
+      }, setError);
 
       setCurrentSong(song);
       setCurrentTime(0);

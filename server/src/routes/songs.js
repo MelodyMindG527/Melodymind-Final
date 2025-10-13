@@ -2,43 +2,99 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { authenticateToken } from '../middleware/auth.js'; // Import the correct middleware
+import { authenticateToken } from '../middleware/auth.js';
+import { Song } from '../models/Song.js';
+import fs from 'fs';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
+// Ensure upload directories exist
+const songsDir = path.join(__dirname, '../../uploads/songs');
+const coversDir = path.join(__dirname, '../../uploads/covers');
+
+if (!fs.existsSync(songsDir)) {
+  fs.mkdirSync(songsDir, { recursive: true });
+}
+if (!fs.existsSync(coversDir)) {
+  fs.mkdirSync(coversDir, { recursive: true });
+}
+
+// Helper function to generate filename from song metadata
+const generateFileName = (title, artist, mood, album = '') => {
+  const cleanTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const cleanArtist = artist.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const cleanAlbum = album.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const moodPrefix = mood ? `${mood}_` : '';
+  const albumSuffix = cleanAlbum ? `_${cleanAlbum}` : '';
+  return `${moodPrefix}${cleanTitle}_${cleanArtist}${albumSuffix}`;
+};
+
+// Configure multer for song uploads
+const songStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, songsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    const { title, artist, mood, album } = req.body;
+    const baseName = generateFileName(title, artist, mood, album);
+    const extension = path.extname(file.originalname);
+    cb(null, `${baseName}${extension}`);
   }
 });
 
-const upload = multer({
-  storage,
+// Configure multer for cover uploads
+const coverStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, coversDir);
+  },
+  filename: (req, file, cb) => {
+    const { title, artist } = req.body;
+    const baseName = generateFileName(title, artist, '', '');
+    const extension = path.extname(file.originalname);
+    cb(null, `${baseName}_cover${extension}`);
+  }
+});
+
+const songUpload = multer({
+  storage: songStorage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 20 * 1024 * 1024, // 20MB limit for songs
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /mp3|wav|ogg|m4a/;
+    const allowedTypes = /mp3|wav|ogg|m4a|flac/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
 
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb(new Error('Only audio files are allowed'));
+      cb(new Error('Only audio files (mp3, wav, ogg, m4a, flac) are allowed'));
+    }
+  }
+});
+
+const coverUpload = multer({
+  storage: coverStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for covers
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files (jpeg, jpg, png, gif, webp) are allowed'));
     }
   }
 });
 
 // Change requireAuth to authenticateToken
-router.post('/upload', authenticateToken, upload.single('file'), async (req, res, next) => {
+router.post('/upload', authenticateToken, songUpload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });

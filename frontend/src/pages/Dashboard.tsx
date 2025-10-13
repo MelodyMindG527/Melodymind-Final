@@ -164,8 +164,129 @@ const realMoodSongs = {
       genre: "Classical",
       youtubeId: "CvFH_6DNRCY",
       url: "https://www.youtube.com/watch?v=CvFH_6DNRCY"
+    },
+    {
+      id: "9",
+      title: "River Flows in You",
+      artist: "Yiruma",
+      album: "First Love",
+      duration: 240,
+      cover: "https://i.ytimg.com/vi/7maJOI3QMu0/hqdefault.jpg",
+      mood: "calm",
+      genre: "Classical",
+      youtubeId: "7maJOI3QMu0",
+      url: "https://www.youtube.com/watch?v=7maJOI3QMu0"
+    },
+    {
+      id: "10",
+      title: "Gymnopédie No. 1",
+      artist: "Erik Satie",
+      album: "Trois Gymnopédies",
+      duration: 210,
+      cover: "https://i.ytimg.com/vi/S-Xm7s9eGxU/hqdefault.jpg",
+      mood: "calm",
+      genre: "Classical",
+      youtubeId: "S-Xm7s9eGxU",
+      url: "https://www.youtube.com/watch?v=S-Xm7s9eGxU"
+    },
+    {
+      id: "11",
+      title: "Canon in D",
+      artist: "Johann Pachelbel",
+      album: "Canon and Gigue",
+      duration: 330,
+      cover: "https://i.ytimg.com/vi/NlprozG9BwY/hqdefault.jpg",
+      mood: "calm",
+      genre: "Classical",
+      youtubeId: "NlprozG9BwY",
+      url: "https://www.youtube.com/watch?v=NlprozG9BwY"
+    },
+    {
+      id: "12",
+      title: "Moonlight Sonata",
+      artist: "Ludwig van Beethoven",
+      album: "Piano Sonata No. 14",
+      duration: 900,
+      cover: "https://i.ytimg.com/vi/4Tr0otuiQuU/hqdefault.jpg",
+      mood: "calm",
+      genre: "Classical",
+      youtubeId: "4Tr0otuiQuU",
+      url: "https://www.youtube.com/watch?v=4Tr0otuiQuU"
     }
-
+  ],
+  neutral: [
+    {
+      id: "13",
+      title: "Weightless",
+      artist: "Marconi Union",
+      album: "Weightless",
+      duration: 480,
+      cover: "https://i.ytimg.com/vi/UfcAVejslrU/hqdefault.jpg",
+      mood: "neutral",
+      genre: "Ambient",
+      youtubeId: "UfcAVejslrU",
+      url: "https://www.youtube.com/watch?v=UfcAVejslrU"
+    },
+    {
+      id: "14",
+      title: "Clair de Lune",
+      artist: "Claude Debussy",
+      album: "Suite bergamasque",
+      duration: 300,
+      cover: "https://i.ytimg.com/vi/CvFH_6DNRCY/hqdefault.jpg",
+      mood: "neutral",
+      genre: "Classical",
+      youtubeId: "CvFH_6DNRCY",
+      url: "https://www.youtube.com/watch?v=CvFH_6DNRCY"
+    },
+    {
+      id: "15",
+      title: "River Flows in You",
+      artist: "Yiruma",
+      album: "First Love",
+      duration: 240,
+      cover: "https://i.ytimg.com/vi/7maJOI3QMu0/hqdefault.jpg",
+      mood: "neutral",
+      genre: "Classical",
+      youtubeId: "7maJOI3QMu0",
+      url: "https://www.youtube.com/watch?v=7maJOI3QMu0"
+    },
+    {
+      id: "16",
+      title: "Gymnopédie No. 1",
+      artist: "Erik Satie",
+      album: "Trois Gymnopédies",
+      duration: 210,
+      cover: "https://i.ytimg.com/vi/S-Xm7s9eGxU/hqdefault.jpg",
+      mood: "neutral",
+      genre: "Classical",
+      youtubeId: "S-Xm7s9eGxU",
+      url: "https://www.youtube.com/watch?v=S-Xm7s9eGxU"
+    },
+    {
+      id: "17",
+      title: "Canon in D",
+      artist: "Johann Pachelbel",
+      album: "Canon and Gigue",
+      duration: 330,
+      cover: "https://i.ytimg.com/vi/NlprozG9BwY/hqdefault.jpg",
+      mood: "neutral",
+      genre: "Classical",
+      youtubeId: "NlprozG9BwY",
+      url: "https://www.youtube.com/watch?v=NlprozG9BwY"
+    },
+    {
+      id: "18",
+      title: "Moonlight Sonata",
+      artist: "Ludwig van Beethoven",
+      album: "Piano Sonata No. 14",
+      duration: 900,
+      cover: "https://i.ytimg.com/vi/4Tr0otuiQuU/hqdefault.jpg",
+      mood: "neutral",
+      genre: "Classical",
+      youtubeId: "4Tr0otuiQuU",
+      url: "https://www.youtube.com/watch?v=4Tr0otuiQuU"
+    }
   ]
 };
 
@@ -316,6 +437,7 @@ class OpenRouterLyricsService {
       
     } catch (error) {
       console.error('OpenRouter lyrics error:', error);
+
       return [];
     }
   }
@@ -324,6 +446,7 @@ class OpenRouterLyricsService {
 // Initialize services (Replace with your actual API keys)
 const youTubePlayer = new YouTubeMusicPlayer();
 const lyricsService = new OpenRouterLyricsService('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');
+
 
 const Dashboard: React.FC = () => {
   const theme = useTheme();
@@ -442,7 +565,8 @@ const Dashboard: React.FC = () => {
 
   const handleMoodDetected = (mood: any) => {
     setCurrentMood(mood);
-    setSelectedMood(mood.type);
+    // Use emotion field from webcam/voice/text detection, fallback to type
+    setSelectedMood(mood.emotion || mood.type || 'neutral');
   };
 
   const getMoodColor = (moodType: string) => {
@@ -451,6 +575,7 @@ const Dashboard: React.FC = () => {
       sad: '#f44336',
       energetic: '#ff9800',
       calm: '#2196f3',
+      neutral: '#9c27b0', // Purple for neutral mood
       anxious: '#ff5722',
       focused: '#795548',
     };
@@ -655,8 +780,9 @@ const Dashboard: React.FC = () => {
           { icon: Psychology, title: "Describe Mood (Text)", desc: "Type how you feel", action: () => setShowTextModal(true), gradient: 'linear-gradient(135deg, #34e89e 0%, #0f3443 100%)' },
           { icon: MusicNote, title: "Voice Control", desc: "Speak commands or mood", action: () => setShowVoice(true), gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
           { icon: Lyrics, title: "Smart Playlist", desc: "AI-generated playlists", action: () => setShowSmartPlaylist(true), gradient: 'linear-gradient(135deg, #ffd89b 0%, #19547b 100%)' },
+          { icon: Psychology, title: "Sentiment Analysis", desc: "Analyze lyrics emotions", action: () => window.location.href = '/sentiment', gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
         ].map((item, index) => (
-          <Grid item xs={12} md={3} key={item.title}>
+          <Grid item xs={12} sm={6} md={2.4} key={item.title}>
             <motion.div initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: index * 0.1 }}>
               <Card sx={{ background: item.gradient, color: 'white', cursor: 'pointer', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }} onClick={item.action}>
                 <CardContent sx={{ textAlign: 'center', py: 4 }}>
@@ -772,6 +898,7 @@ const Dashboard: React.FC = () => {
                   <MenuItem value="sad">Sad</MenuItem>
                   <MenuItem value="energetic">Energetic</MenuItem>
                   <MenuItem value="calm">Calm</MenuItem>
+                  <MenuItem value="neutral">Neutral</MenuItem>
                 </Select>
               </FormControl>
             </Box>

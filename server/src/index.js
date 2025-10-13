@@ -20,6 +20,8 @@ import journalRoutes from './routes/journal.js';
 import gameRoutes from './routes/games.js';
 import analyticsRoutes from './routes/analytics.js';
 import playlistRoutes from './routes/playlists.js';
+import chatRoutes from './routes/chat.js';
+import sentimentRoutes from './routes/sentiment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,8 +66,13 @@ app.use(cors({
   api.use('/recommendations', recommendationRoutes);
   api.use('/journal', journalRoutes);
   api.use('/games', gameRoutes);
-  api.use('/analytics', analyticsRoutes);
-  api.use('/playlists', playlistRoutes);
+api.use('/analytics', analyticsRoutes);
+api.use('/playlists', playlistRoutes);
+api.use('/chat', chatRoutes);
+api.use('/sentiment', sentimentRoutes);
+
+  // Direct speech emotion analysis endpoint (for frontend compatibility)
+  api.use('/', voiceRoutes);
 
   // 404 and error handlers
   app.use(notFoundHandler);

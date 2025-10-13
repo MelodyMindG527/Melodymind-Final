@@ -32,9 +32,9 @@ const PlaylistRecommendations: React.FC<PlaylistRecommendationsProps> = ({
           name: 'Sunshine Vibes',
           description: 'Upbeat songs to keep your spirits high',
           songs: [
-            { id: '1', title: 'Happy Days', artist: 'Sunshine Band', album: 'Summer Vibes', duration: 180, url: '', cover: 'https://picsum.photos/300/300?random=1', genre: 'pop' },
-            { id: '2', title: 'Good Vibes Only', artist: 'Positive Energy', album: 'Feel Good Hits', duration: 200, url: '', cover: 'https://picsum.photos/300/300?random=2', genre: 'pop' },
-            { id: '3', title: 'Smile', artist: 'Joy Collective', album: 'Happy Times', duration: 175, url: '', cover: 'https://picsum.photos/300/300?random=3', genre: 'pop' },
+            { id: '1', title: 'Happy', artist: 'Pharrell Williams', album: 'Girl', duration: 233, url: 'https://www.youtube.com/watch?v=ZbZSe6N_BXs', youtubeId: 'ZbZSe6N_BXs', cover: 'https://i.ytimg.com/vi/ZbZSe6N_BXs/hqdefault.jpg', genre: 'pop' },
+            { id: '2', title: 'Can\'t Stop the Feeling', artist: 'Justin Timberlake', album: 'Trolls', duration: 237, url: 'https://www.youtube.com/watch?v=ru0K8uYEZWw', youtubeId: 'ru0K8uYEZWw', cover: 'https://i.ytimg.com/vi/ru0K8uYEZWw/hqdefault.jpg', genre: 'pop' },
+            { id: '3', title: 'Good Vibrations', artist: 'The Beach Boys', album: 'Smiley Smile', duration: 175, url: 'https://www.youtube.com/watch?v=Eab_beh07HU', youtubeId: 'Eab_beh07HU', cover: 'https://i.ytimg.com/vi/Eab_beh07HU/hqdefault.jpg', genre: 'pop' },
           ],
           mood: 'happy',
           matchScore: 95,
@@ -57,8 +57,8 @@ const PlaylistRecommendations: React.FC<PlaylistRecommendationsProps> = ({
           name: 'Comfort Zone',
           description: 'Gentle melodies to soothe your soul',
           songs: [
-            { id: '6', title: 'Gentle Rain', artist: 'Peaceful Sounds', album: 'Calm Waters', duration: 240, url: '', cover: 'https://picsum.photos/300/300?random=6', genre: 'ambient' },
-            { id: '7', title: 'Soft Embrace', artist: 'Healing Hearts', album: 'Comfort', duration: 280, url: '', cover: 'https://picsum.photos/300/300?random=7', genre: 'ambient' },
+            { id: '4', title: 'Someone Like You', artist: 'Adele', album: '21', duration: 285, url: 'https://www.youtube.com/watch?v=hLQl3WQQoQ0', youtubeId: 'hLQl3WQQoQ0', cover: 'https://i.ytimg.com/vi/hLQl3WQQoQ0/hqdefault.jpg', genre: 'pop' },
+            { id: '7', title: 'Hello', artist: 'Adele', album: '25', duration: 280, url: 'https://www.youtube.com/watch?v=YQHsXMglC9A', youtubeId: 'YQHsXMglC9A', cover: 'https://i.ytimg.com/vi/YQHsXMglC9A/hqdefault.jpg', genre: 'pop' },
           ],
           mood: 'sad',
           matchScore: 92,

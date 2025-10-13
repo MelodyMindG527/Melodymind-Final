@@ -10,7 +10,7 @@ export const env = {
   MAX_FILE_SIZE_MB: Number(process.env.MAX_FILE_SIZE_MB || 15),
   AI_FACE_ADAPTER: process.env.AI_FACE_ADAPTER || 'mock',
   AI_TEXT_ADAPTER: process.env.AI_TEXT_ADAPTER || 'mock',
-  AI_AUDIO_ADAPTER: process.env.AI_AUDIO_ADAPTER || 'mock',
+  AI_AUDIO_ADAPTER: process.env.AI_AUDIO_ADAPTER || 'text', // Use text analysis for audio
   AI_RECO_ADAPTER: process.env.AI_RECO_ADAPTER || 'mock',
   // Hugging Face
   HF_API_TOKEN: process.env.HF_API_TOKEN || '',
@@ -18,6 +18,9 @@ export const env = {
   HF_TEXT_MODEL_ID: process.env.HF_TEXT_MODEL_ID || 'joeddav/distilbert-base-uncased-go-emotions-student',
   HF_AUDIO_MODEL_ID: process.env.HF_AUDIO_MODEL_ID || 'ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition',
   HF_EMBED_MODEL_ID: process.env.HF_EMBED_MODEL_ID || 'sentence-transformers/all-MiniLM-L6-v2',
+  // OpenRouter
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
+  OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo',
 };
 
 

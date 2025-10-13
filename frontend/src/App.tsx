@@ -11,11 +11,13 @@ import Journal from './pages/Journal';
 import Analytics from './pages/Analytics';
 import Games from './pages/Games';
 import Settings from './pages/Settings';
+import SentimentAnalysisPage from './pages/SentimentAnalysisPage';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Store
 import { useAuthStore } from './store/authStore';
@@ -404,6 +406,24 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/sentiment"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <motion.div
+                    initial="initial"
+                    animate="in"
+                    exit="out"
+                    variants={pageVariants}
+                    transition={pageTransition}
+                  >
+                    <SentimentAnalysisPage />
+                  </motion.div>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </AnimatePresence>
     </Router>
@@ -413,9 +433,11 @@ const AppContent: React.FC = () => {
 // Main App component
 function App() {
   return (
-    <ThemeProvider>
-      <ThemedApp />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

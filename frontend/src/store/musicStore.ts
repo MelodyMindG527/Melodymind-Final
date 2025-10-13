@@ -87,69 +87,123 @@ interface MusicState {
 const dummySongs: Song[] = [
   {
     id: '1',
-    title: 'Happy Days',
-    artist: 'Sunshine Band',
-    album: 'Summer Vibes',
-    duration: 180,
-    url: 'https://example.com/song1.mp3',
-    cover: 'https://picsum.photos/300/300?random=1',
+    title: 'Happy',
+    artist: 'Pharrell Williams',
+    album: 'Girl',
+    duration: 233,
+    url: 'https://www.youtube.com/watch?v=ZbZSe6N_BXs',
+    youtubeId: 'ZbZSe6N_BXs',
+    cover: 'https://i.ytimg.com/vi/ZbZSe6N_BXs/hqdefault.jpg',
     genre: 'pop',
     mood: 'happy',
   },
   {
     id: '2',
-    title: 'Calm Waters',
-    artist: 'Ocean Waves',
-    album: 'Peaceful Moments',
-    duration: 240,
-    url: 'https://example.com/song2.mp3',
-    cover: 'https://picsum.photos/300/300?random=2',
+    title: 'Weightless',
+    artist: 'Marconi Union',
+    album: 'Weightless',
+    duration: 485,
+    url: 'https://www.youtube.com/watch?v=UfcAVejslrU',
+    youtubeId: 'UfcAVejslrU',
+    cover: 'https://i.ytimg.com/vi/UfcAVejslrU/hqdefault.jpg',
     genre: 'ambient',
     mood: 'calm',
   },
   {
     id: '3',
-    title: 'Energetic Beat',
-    artist: 'Power Pulse',
-    album: 'Workout Mix',
-    duration: 200,
-    url: 'https://example.com/song3.mp3',
-    cover: 'https://picsum.photos/300/300?random=3',
-    genre: 'electronic',
+    title: 'Eye of the Tiger',
+    artist: 'Survivor',
+    album: 'Eye of the Tiger',
+    duration: 245,
+    url: 'https://www.youtube.com/watch?v=btPJPFnesV4',
+    youtubeId: 'btPJPFnesV4',
+    cover: 'https://i.ytimg.com/vi/btPJPFnesV4/hqdefault.jpg',
+    genre: 'rock',
     mood: 'energetic',
   },
   {
     id: '4',
-    title: 'Melancholy Rain',
-    artist: 'Sad Symphony',
-    album: 'Grey Skies',
-    duration: 220,
-    url: 'https://example.com/song4.mp3',
-    cover: 'https://picsum.photos/300/300?random=4',
-    genre: 'indie',
+    title: 'Someone Like You',
+    artist: 'Adele',
+    album: '21',
+    duration: 285,
+    url: 'https://www.youtube.com/watch?v=hLQl3WQQoQ0',
+    youtubeId: 'hLQl3WQQoQ0',
+    cover: 'https://i.ytimg.com/vi/hLQl3WQQoQ0/hqdefault.jpg',
+    genre: 'pop',
     mood: 'sad',
   },
   {
     id: '5',
-    title: 'Focus Flow',
-    artist: 'Deep Work',
-    album: 'Productivity',
+    title: 'Clair de Lune',
+    artist: 'Claude Debussy',
+    album: 'Suite Bergamasque',
     duration: 300,
-    url: 'https://example.com/song5.mp3',
-    cover: 'https://picsum.photos/300/300?random=5',
-    genre: 'ambient',
-    mood: 'focused',
+    url: 'https://www.youtube.com/watch?v=CvFH_6DNRCY',
+    youtubeId: 'CvFH_6DNRCY',
+    cover: 'https://i.ytimg.com/vi/CvFH_6DNRCY/hqdefault.jpg',
+    genre: 'classical',
+    mood: 'calm',
   },
   {
     id: '6',
-    title: 'Anxious Thoughts',
-    artist: 'Mind Waves',
-    album: 'Inner Peace',
-    duration: 190,
-    url: 'https://example.com/song6.mp3',
-    cover: 'https://picsum.photos/300/300?random=6',
-    genre: 'electronic',
+    title: 'Breathe Me',
+    artist: 'Sia',
+    album: '1000 Forms of Fear',
+    duration: 276,
+    url: 'https://www.youtube.com/watch?v=2To6qk1API4',
+    youtubeId: '2To6qk1API4',
+    cover: 'https://i.ytimg.com/vi/2To6qk1API4/hqdefault.jpg',
+    genre: 'pop',
     mood: 'anxious',
+  },
+  {
+    id: '7',
+    title: 'River Flows in You',
+    artist: 'Yiruma',
+    album: 'First Love',
+    duration: 240,
+    url: 'https://www.youtube.com/watch?v=7maJOI3QMu0',
+    youtubeId: '7maJOI3QMu0',
+    cover: 'https://i.ytimg.com/vi/7maJOI3QMu0/hqdefault.jpg',
+    genre: 'classical',
+    mood: 'calm',
+  },
+  {
+    id: '8',
+    title: 'Gymnopédie No. 1',
+    artist: 'Erik Satie',
+    album: 'Trois Gymnopédies',
+    duration: 210,
+    url: 'https://www.youtube.com/watch?v=S-Xm7s9eGxU',
+    youtubeId: 'S-Xm7s9eGxU',
+    cover: 'https://i.ytimg.com/vi/S-Xm7s9eGxU/hqdefault.jpg',
+    genre: 'classical',
+    mood: 'calm',
+  },
+  {
+    id: '9',
+    title: 'Canon in D',
+    artist: 'Johann Pachelbel',
+    album: 'Canon and Gigue',
+    duration: 330,
+    url: 'https://www.youtube.com/watch?v=NlprozG9BwY',
+    youtubeId: 'NlprozG9BwY',
+    cover: 'https://i.ytimg.com/vi/NlprozG9BwY/hqdefault.jpg',
+    genre: 'classical',
+    mood: 'calm',
+  },
+  {
+    id: '10',
+    title: 'Moonlight Sonata',
+    artist: 'Ludwig van Beethoven',
+    album: 'Piano Sonata No. 14',
+    duration: 900,
+    url: 'https://www.youtube.com/watch?v=4Tr0otuiQuU',
+    youtubeId: '4Tr0otuiQuU',
+    cover: 'https://i.ytimg.com/vi/4Tr0otuiQuU/hqdefault.jpg',
+    genre: 'classical',
+    mood: 'calm',
   },
 ];
 
@@ -171,40 +225,78 @@ export const useMusicStore = create<MusicState>()(
 
       setCurrentSong: (song) => {
         const { audioElement } = get();
-        if (audioElement) audioElement.pause();
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.src = '';
+        }
 
         if (song) {
-          const newAudio = new Audio(song.url || "");
-          newAudio.volume = get().volume;
+          // For YouTube songs, we don't create an HTML5 Audio element
+          // The YouTube player will handle playback
+          if (song.youtubeId) {
+            set({
+              currentSong: song,
+              audioElement: null, // No HTML5 Audio for YouTube
+              isPlaying: false,
+              currentTime: 0,
+              duration: song.duration || 0,
+            });
+          } else if (song.url && song.url.startsWith('http')) {
+            // Only create HTML5 Audio for direct audio URLs
+            const newAudio = new Audio(song.url);
+            newAudio.volume = get().volume;
 
-          newAudio.addEventListener('loadedmetadata', () => {
-            set({ duration: newAudio.duration });
-          });
+            newAudio.addEventListener('loadedmetadata', () => {
+              set({ duration: newAudio.duration });
+            });
 
-          newAudio.addEventListener('timeupdate', () => {
-            set({ currentTime: newAudio.currentTime });
-          });
+            newAudio.addEventListener('timeupdate', () => {
+              set({ currentTime: newAudio.currentTime });
+            });
 
-          newAudio.addEventListener('ended', () => {
-            const { currentSong } = get();
-            if (currentSong) {
-              get().addToHistory({
-                songId: currentSong.id,
-                mood: currentSong.mood,
-                duration: currentSong.duration,
-                completed: true,
+            newAudio.addEventListener('ended', () => {
+              const { currentSong } = get();
+              if (currentSong) {
+                get().addToHistory({
+                  songId: currentSong.id,
+                  mood: currentSong.mood,
+                  duration: currentSong.duration,
+                  completed: true,
+                });
+              }
+              get().playNext();
+            });
+
+            newAudio.addEventListener('error', (e) => {
+              console.error('Audio loading error:', e);
+              // Don't set the song if audio fails to load
+              set({
+                currentSong: null,
+                audioElement: null,
+                isPlaying: false,
+                currentTime: 0,
+                duration: 0,
               });
-            }
-            get().playNext();
-          });
+            });
 
-          set({
-            currentSong: song,
-            audioElement: newAudio,
-            isPlaying: false,
-            currentTime: 0,
-            duration: 0,
-          });
+            set({
+              currentSong: song,
+              audioElement: newAudio,
+              isPlaying: false,
+              currentTime: 0,
+              duration: 0,
+            });
+          } else {
+            // No valid audio source
+            console.warn('No valid audio source for song:', song.title);
+            set({
+              currentSong: null,
+              audioElement: null,
+              isPlaying: false,
+              currentTime: 0,
+              duration: 0,
+            });
+          }
         } else {
           set({
             currentSong: null,
@@ -218,6 +310,15 @@ export const useMusicStore = create<MusicState>()(
 
       togglePlay: () => {
         const { audioElement, isPlaying, currentSong } = get();
+        
+        // For YouTube songs, the YouTube player handles play/pause
+        if (currentSong?.youtubeId) {
+          // YouTube player controls are handled in the components
+          set({ isPlaying: !isPlaying });
+          return;
+        }
+
+        // For HTML5 Audio songs
         if (!audioElement) return;
 
         if (isPlaying) {
@@ -239,8 +340,10 @@ export const useMusicStore = create<MusicState>()(
       },
 
       setVolume: (volume) => {
-        const { audioElement } = get();
+        const { audioElement, currentSong } = get();
+        // For HTML5 Audio songs
         if (audioElement) audioElement.volume = volume;
+        // For YouTube songs, volume is handled by the YouTube player in components
         set({ volume });
       },
 
@@ -268,15 +371,21 @@ export const useMusicStore = create<MusicState>()(
 
       playSong: (song) => {
         get().setCurrentSong(song);
-        setTimeout(() => get().togglePlay(), 100);
+        // For YouTube songs, the YouTube player will handle playback
+        // For HTML5 Audio songs, toggle play after a short delay
+        if (!song.youtubeId) {
+          setTimeout(() => get().togglePlay(), 100);
+        }
       },
 
       stopPlayback: () => {
-        const { audioElement } = get();
+        const { audioElement, currentSong } = get();
+        // For HTML5 Audio songs
         if (audioElement) {
           audioElement.pause();
           audioElement.currentTime = 0;
         }
+        // For YouTube songs, stopping is handled by the YouTube player in components
         set({ isPlaying: false, currentTime: 0 });
       },
 
@@ -295,11 +404,13 @@ export const useMusicStore = create<MusicState>()(
       },
 
       seekTo: (time) => {
-        const { audioElement } = get();
+        const { audioElement, currentSong } = get();
+        // For HTML5 Audio songs
         if (audioElement) {
           audioElement.currentTime = time;
           set({ currentTime: time });
         }
+        // For YouTube songs, seeking is handled by the YouTube player in components
       },
 
       addToHistory: (entry) => {
@@ -353,4 +464,5 @@ export const moodSongs = {
   focused: dummySongs.filter((s) => s.mood === 'focused'),
   excited: dummySongs.filter((s) => s.mood === 'excited'),
   melancholic: dummySongs.filter((s) => s.mood === 'melancholic'),
+  neutral: dummySongs.filter((s) => s.mood === 'calm'), // Map neutral to calm songs
 };

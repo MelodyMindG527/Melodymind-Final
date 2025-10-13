@@ -38,6 +38,7 @@ import {
   Analytics as AnalyticsIcon,
   SportsEsports as GamesIcon,
   Settings as SettingsIcon,
+  Psychology as SentimentIcon,
   Menu as MenuIcon,
   AccountCircle,
   Logout,
@@ -90,6 +91,12 @@ const navItems = [
     label: 'Analytics', 
     icon: <AnalyticsIcon />,
     description: 'Data & trends'
+  },
+  { 
+    path: '/sentiment', 
+    label: 'Sentiment Analysis', 
+    icon: <SentimentIcon />,
+    description: 'Analyze lyrics emotions'
   },
   { 
     path: '/games', 
