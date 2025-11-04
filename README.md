@@ -24,6 +24,11 @@ Engagement Layer – Games, journals, and analytics keep the user emotionally en
 
 Feedback Loop – User interactions improve AI recommendations over time.
 
+<img width="950" height="945" alt="image" src="https://github.com/user-attachments/assets/b88f02e2-bfd5-47bd-9159-ed914e85e457" />
+<img width="750" height="1125" alt="image" src="https://github.com/user-attachments/assets/18becdba-f7d4-4b1e-b7c1-0cff61d71785" />
+
+
+
 🧠 Core Features
 🎭 Multi-Modal Mood Detection
 
@@ -64,6 +69,13 @@ Frequency & intensity charts showing mood changes.
 Weekly & monthly mood trend visualization.
 
 Insights into music genre preferences based on emotion.
+<img width="940" height="512" alt="image" src="https://github.com/user-attachments/assets/495e4296-1c79-44cf-9e1f-8036b1323b70" />
+<img width="968" height="573" alt="image" src="https://github.com/user-attachments/assets/fb64ab88-4136-47ab-abf9-4e8d941d3106" />
+<img width="827" height="476" alt="image" src="https://github.com/user-attachments/assets/0818b02e-7eb7-4bbf-95e9-a6d0e9a826e3" />
+<img width="940" height="511" alt="image" src="https://github.com/user-attachments/assets/6ad40170-1b5b-4a8c-9d1b-4c8f3d65aefe" />
+<img width="940" height="543" alt="image" src="https://github.com/user-attachments/assets/d1725353-2770-4932-b6d7-e4c09644ba0e" />
+
+
 
 🧩 End Users
 User Type	Description
@@ -179,3 +191,4 @@ Recharts – for analytical visualization
 OpenAI & Emotion APIs – for mood analysis concepts
 
 React Community – for continuous innovation
+Deployment link -- http://melodymind-olive.vercel.app
