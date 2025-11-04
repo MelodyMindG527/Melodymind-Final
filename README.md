@@ -1,4 +1,4 @@
-🎧 MelodyMind – AI-Powered Mood-Based Music Player
+**🎧 MelodyMind – AI-Powered Mood-Based Music Player**
 
 “Because sometimes, the right song can say what words cannot.”
 
